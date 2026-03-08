@@ -12,7 +12,7 @@ export default function HomePage() {
         </div>
         
         <h1 className="text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-b from-white to-gray-400 sm:text-7xl">
-          Akal Platform
+          Akaal Platform
         </h1>
         
         <p className="mt-6 text-lg leading-8 text-gray-400 max-w-2xl mx-auto">
