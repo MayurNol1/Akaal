@@ -7,20 +7,25 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+      const userRole = auth?.user?.role;
       const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
       const isOnAdmin = nextUrl.pathname.startsWith("/admin");
       const isOnOrders = nextUrl.pathname.startsWith("/orders");
 
-      if (isOnDashboard || isOnAdmin || isOnOrders) {
+      if (isOnAdmin) {
+        if (isLoggedIn && userRole === "ADMIN") return true;
+        return false; // Redirect to login for non-admins
+      }
+
+      if (isOnDashboard || isOnOrders) {
         if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
+        return false;
       }
       return true;
     },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        // @ts-expect-error - Handled by custom typing extension
         token.role = user.role;
       }
       return token;
@@ -30,7 +35,7 @@ export const authConfig = {
         session.user.id = token.id as string;
       }
       if (token?.role) {
-        // @ts-expect-error - Handled by custom typing extension
+        // @ts-expect-error - session.user.role exists via next-auth.d.ts augmentation
         session.user.role = token.role;
       }
       return session;

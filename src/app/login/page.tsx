@@ -3,16 +3,23 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginSchema, LoginInput } from "@/lib/schemas";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Mail, Lock, Loader2, AlertCircle, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
+  const { status } = useSession();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
 
   const {
     register,
@@ -27,7 +34,6 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // In Auth.js v5 beta, signIn from next-auth/react is used on client side
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
@@ -38,7 +44,7 @@ export default function LoginPage() {
         setError("Invalid email or password. Please try again.");
       } else {
         router.push("/dashboard");
-        router.refresh(); // Refresh session on the dashboard
+        router.refresh();
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
@@ -47,15 +53,18 @@ export default function LoginPage() {
     }
   };
 
+  // Aggressive loading spinner removed to prevent hanging states.
+  // Redirection is handled silently in the background by useEffect.
+  // If we really want to show nothing while status === "loading", we can, 
+  // but showing the form is safer than a stuck spinner.
+
   return (
     <div className="relative isolate min-h-screen bg-black flex items-center justify-center p-6 overflow-hidden">
-      {/* Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full" />
       
       <div className="w-full max-w-md animate-fade-in text-white">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
-          {/* Logo/Icon */}
           <div className="flex justify-center mb-8">
             <div className="h-14 w-14 bg-linear-to-tr from-blue-500 to-purple-600 rounded-xl rotate-3 shadow-[0_0_30px_-5px_rgba(59,130,246,0.3)] flex items-center justify-center">
               <Lock className="text-white w-7 h-7" />
@@ -74,7 +83,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-xl flex items-center gap-3 text-sm animate-shake">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <AlertCircle className="w-5 h-5 shrink-0" />
                 <p>{error}</p>
               </div>
             )}
@@ -148,4 +157,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

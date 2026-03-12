@@ -4,15 +4,23 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RegisterSchema, RegisterInput } from "@/lib/schemas";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Mail, Lock, User, Loader2, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function RegisterPage() {
+  const { status } = useSession();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
 
   const {
     register,
@@ -50,15 +58,16 @@ export default function RegisterPage() {
     }
   };
 
+  // Aggressive loading spinner removed to prevent hanging states.
+  // Redirection is handled silently in the background by useEffect.
+
   return (
     <div className="relative isolate min-h-screen bg-black flex items-center justify-center p-6 overflow-hidden text-white">
-      {/* Background Glows */}
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
       
       <div className="w-full max-w-md animate-fade-in">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
-          {/* Logo/Icon */}
           <div className="flex justify-center mb-8">
             <div className="h-14 w-14 bg-linear-to-tr from-purple-600 to-blue-500 rounded-xl -rotate-3 shadow-[0_0_30px_-5px_rgba(147,51,234,0.3)] flex items-center justify-center">
               <User className="text-white w-7 h-7" />
