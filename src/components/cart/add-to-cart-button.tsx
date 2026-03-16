@@ -32,6 +32,8 @@ export function AddToCartButton({ productId, variant = "primary" }: AddToCartBut
         }
 
         setShowToast(true);
+        // Dispatch custom event for cart updates
+        window.dispatchEvent(new CustomEvent("cart-updated"));
         setTimeout(() => setShowToast(false), 3000);
       } catch {
         setError("Something went wrong. Please try again.");

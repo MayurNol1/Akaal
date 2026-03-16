@@ -6,7 +6,9 @@ export const CreateProductSchema = z.object({
   price: z.number().positive("Price must be a positive number"),
   stock: z.number().int().nonnegative("Stock cannot be negative").default(0),
   imageUrl: z.string().optional().nullable(),
-  categoryId: z.string().optional().nullable(),
+  categoryId: z.string().optional().nullable().transform(val => val === '' ? null : val),
+  spiritualEssence: z.string().optional().nullable(),
+  specifications: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
 });
 

@@ -7,7 +7,7 @@ export class ProductService {
     return JSON.parse(JSON.stringify(product));
   }
 
-  static async getProducts(filters?: { categoryId?: string; isActive?: boolean; limit?: number }) {
+  static async getProducts(filters?: { categoryId?: string; isActive?: boolean; limit?: number; ids?: string[] }) {
     const products = await ProductRepository.findMany(filters);
     return JSON.parse(JSON.stringify(products));
   }

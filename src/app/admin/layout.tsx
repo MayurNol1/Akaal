@@ -12,10 +12,13 @@ import {
   LogOut,
   Sparkles,
   Search,
-  Bell,
   Menu,
   ChevronRight
 } from "lucide-react";
+
+import { NotificationBell } from "./notification-bell";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function AdminLayout({
   children,
@@ -24,6 +27,15 @@ export default function AdminLayout({
 }) {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const router = useRouter();
+  const [globalSearch, setGlobalSearch] = useState("");
+
+  const handleGlobalSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!globalSearch.trim()) return;
+    router.push(`/admin/products?search=${encodeURIComponent(globalSearch)}`);
+    setGlobalSearch("");
+  };
 
   if (status === "loading") {
     return (
@@ -84,21 +96,20 @@ export default function AdminLayout({
       <main className="flex-1 flex flex-col min-w-0 bg-transparent overflow-y-auto">
         <header className="h-24 border-b border-white/5 flex items-center justify-between px-12 bg-[#0a0a0a]/80 backdrop-blur-md sticky top-0 z-30">
           <div className="flex items-center gap-6 flex-1 max-w-xl">
-             <div className="relative group w-full">
+             <form onSubmit={handleGlobalSearch} className="relative group w-full">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-hover:text-primary transition-colors" size={16} />
                 <input 
                   type="text" 
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
                   placeholder="Universal Search..." 
-                  className="w-full bg-white/2 border border-white/5 rounded-2xl py-3 pl-12 pr-6 focus:outline-none focus:border-primary/20 transition-all text-[11px] font-medium placeholder:text-zinc-800"
+                  className="w-full bg-white/2 border border-white/5 rounded-2xl py-3 pl-12 pr-6 focus:outline-none focus:border-primary/20 transition-all text-[11px] font-medium placeholder:text-zinc-800 text-white"
                 />
-             </div>
+             </form>
           </div>
 
           <div className="flex items-center gap-6">
-             <button className="h-12 w-12 rounded-2xl bg-white/2 border border-white/5 flex items-center justify-center text-zinc-600 hover:text-primary hover:border-primary/20 transition-all relative">
-                <Bell size={18} />
-                <span className="absolute top-3 right-3 size-2 bg-primary rounded-full animate-pulse" />
-             </button>
+             <NotificationBell />
              <button className="lg:hidden h-12 w-12 rounded-2xl bg-white/2 border border-white/5 flex items-center justify-center text-zinc-600">
                 <Menu size={20} />
              </button>

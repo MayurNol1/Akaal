@@ -27,6 +27,8 @@ interface ProductFormProps {
     imageUrl?: string | null;
     categoryId?: string | null;
     isActive: boolean;
+    spiritualEssence?: string | null;
+    specifications?: string | null;
   };
   productId?: string;
   isEdit?: boolean;
@@ -70,6 +72,8 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
       price: parseFloat(initialData.price.toString()),
       stock: initialData.stock,
       isActive: initialData.isActive,
+      spiritualEssence: initialData.spiritualEssence || "",
+      specifications: initialData.specifications || "",
     } : {
       name: "",
       description: "",
@@ -77,7 +81,9 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
       isActive: true,
       price: 0,
       imageUrl: "",
-      categoryId: null
+      categoryId: null,
+      spiritualEssence: "",
+      specifications: "",
     },
   });
 
@@ -247,9 +253,29 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Description of Presence</label>
               <textarea 
                 {...register("description")}
-                rows={6}
+                rows={3}
                 className="w-full bg-black/40 border border-white/5 rounded-2xl p-5 text-white placeholder:text-zinc-800 focus:outline-none focus:border-gold/30 transition-all shadow-2xl font-light tracking-wide resize-none"
                 placeholder="Relate the spiritual properties and divine origin..."
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Spiritual Essence Details</label>
+              <textarea 
+                {...register("spiritualEssence")}
+                rows={3}
+                className="w-full bg-black/40 border border-white/5 rounded-2xl p-5 text-white placeholder:text-zinc-800 focus:outline-none focus:border-gold/30 transition-all shadow-2xl font-light tracking-wide resize-none"
+                placeholder="Governed by cosmic principles..."
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Physical Specifications</label>
+              <textarea 
+                {...register("specifications")}
+                rows={3}
+                className="w-full bg-black/40 border border-white/5 rounded-2xl p-5 text-white placeholder:text-zinc-800 focus:outline-none focus:border-gold/30 transition-all shadow-2xl font-light tracking-wide resize-none"
+                placeholder="Hand-crafted using traditional methods..."
               />
             </div>
           </div>

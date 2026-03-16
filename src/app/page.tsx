@@ -10,6 +10,9 @@ import {
 
 import { ProductService } from "@/modules/products/service";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import prisma from "@/lib/prisma";
+import { Category } from "@prisma/client";
+import { NewsletterForm } from "@/components/home/newsletter-form";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +27,10 @@ type FeaturedProduct = {
 
 export default async function HomePage() {
   const featuredProducts = await ProductService.getProducts({ isActive: true, limit: 3 });
+  const categories = await prisma.category.findMany({
+    take: 4,
+    orderBy: { name: 'asc' }
+  });
 
 
   return (
@@ -119,16 +126,7 @@ export default async function HomePage() {
           <p className="text-slate-400 text-lg mb-10 max-w-2xl mx-auto font-light leading-relaxed">
             Subscribe to receive spiritual insights, exclusive mantras, and early access to our most rare handcrafted collections.
           </p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <input 
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-6 py-4 focus:ring-1 focus:ring-primary focus:border-primary text-white outline-none" 
-              placeholder="Your celestial email" 
-              type="email"
-            />
-            <button className="bg-primary text-background-dark font-black px-8 py-4 rounded-xl hover:shadow-[0_0_20px_rgba(236,149,19,0.3)] transition-all whitespace-nowrap uppercase text-xs tracking-widest">
-              Subscribe Now
-            </button>
-          </form>
+          <NewsletterForm />
         </div>
       </section>
 
@@ -145,15 +143,32 @@ export default async function HomePage() {
                 Dedicated to bringing the essence of spiritual ancient wisdom into the modern home through ethically sourced sacred artifacts.
               </p>
               <div className="flex gap-4">
-                <SocialIcon icon={<Globe size={18} />} />
-                <SocialIcon icon={<Mail size={18} />} />
-                <SocialIcon icon={<Share2 size={18} />} />
+                <SocialIcon icon={<Globe size={18} />} href="https://akal.com" />
+                <SocialIcon icon={<Mail size={18} />} href="mailto:sanctuary@akal.com" />
+                <SocialIcon icon={<Share2 size={18} />} href="#" />
               </div>
             </div>
             
-            <FooterColumn title="Shop" links={["Rudraksha", "Idols & Sculptures", "Crystals", "Meditation Mats"]} />
-            <FooterColumn title="Wisdom Center" links={["Meaning of Om", "Mahadev's Teachings", "Meditation Guide", "Ritual Instructions"]} />
-            <FooterColumn title="Support" links={["Shipping Policy", "Returns", "Privacy", "Contact Us"]} />
+            <FooterColumn 
+              title="Shop" 
+              links={categories.map((c: Category) => ({ label: c.name, href: `/products?category=${c.id}` }))} 
+            />
+            <FooterColumn 
+              title="Wisdom Center" 
+              links={[
+                { label: "Our Story", href: "/about" },
+                { label: "Spiritual Path", href: "/dashboard" },
+                { label: "Sacred Wishes", href: "/wishlist" }
+              ]} 
+            />
+            <FooterColumn 
+              title="Support" 
+              links={[
+                { label: "My Orders", href: "/orders" },
+                { label: "Privacy Sanctuary", href: "/settings" },
+                { label: "Contact Us", href: "mailto:support@akal.com" }
+              ]} 
+            />
           </div>
           
           <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -197,22 +212,22 @@ function ProductCard({ id, image, title, price, desc }: { id: string, image: str
   );
 }
 
-function FooterColumn({ title, links }: { title: string, links: string[] }) {
+function FooterColumn({ title, links }: { title: string, links: { label: string, href: string }[] }) {
   return (
     <div className="space-y-8">
       <h5 className="text-white font-bold uppercase text-xs tracking-widest">{title}</h5>
       <ul className="space-y-4 text-sm text-slate-500 font-light">
         {links.map(link => (
-          <li key={link}><Link href="#" className="hover:text-primary transition-colors">{link}</Link></li>
+          <li key={link.label}><Link href={link.href} className="hover:text-primary transition-colors">{link.label}</Link></li>
         ))}
       </ul>
     </div>
   );
 }
 
-function SocialIcon({ icon }: { icon: React.ReactNode }) {
+function SocialIcon({ icon, href }: { icon: React.ReactNode, href: string }) {
   return (
-    <Link href="#" className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-primary transition-colors border border-white/5 group">
+    <Link href={href} className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-primary transition-colors border border-white/5 group">
       {icon}
     </Link>
   );

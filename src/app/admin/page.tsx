@@ -4,7 +4,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { AdminImage } from "./admin-image";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,63 @@ export default async function AdminDashboardPage() {
     orderBy: { createdAt: 'desc' },
     take: 4 
   });
+
+  // Calculate revenue for the last 7 days
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  
+  const sevenDaysAgo = new Date(todayDate);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+  const recentOrders = await prisma.order.findMany({
+    where: {
+      createdAt: {
+        gte: sevenDaysAgo,
+      },
+    },
+    select: {
+      total: true,
+      createdAt: true,
+    },
+  });
+
+  const dailyRevenue = Array(7).fill(0);
+  const daysLabels: string[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(todayDate);
+    d.setDate(todayDate.getDate() - i);
+    daysLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+  }
+
+  recentOrders.forEach(order => {
+    const orderDay = new Date(order.createdAt);
+    orderDay.setHours(0, 0, 0, 0);
+    const diffTime = todayDate.getTime() - orderDay.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    const index = 6 - diffDays;
+    if (index >= 0 && index < 7) {
+      dailyRevenue[index] += Number(order.total);
+    }
+  });
+
+  const maxRevenue = Math.max(...dailyRevenue, 1);
+  const points = dailyRevenue.map((val, index) => {
+    const x = index * (1000 / 6);
+    const y = 180 - (val / maxRevenue) * 160;
+    return { x, y };
+  });
+
+  const linePath = points.length > 0 ? `M${points[0].x},${points[0].y} ` + points.slice(1).map((p, i) => {
+    const pPrev = points[i]; 
+    const cp1x = pPrev.x + (p.x - pPrev.x) / 2;
+    const cp1y = pPrev.y;
+    const cp2x = pPrev.x + (p.x - pPrev.x) / 2;
+    const cp2y = p.y;
+    return `C${cp1x},${cp1y} ${cp2x},${cp2y} ${p.x},${p.y}`;
+  }).join(' ') : '';
+
+  const fillPath = points.length > 0 ? `${linePath} L1000,200 L0,200 Z` : '';
 
   return (
     <div className="space-y-10">
@@ -92,11 +149,13 @@ export default async function AdminDashboardPage() {
                 <stop offset="100%" stopColor="#ec9513" stopOpacity="0"></stop>
               </linearGradient>
             </defs>
-            <path d="M0,150 Q100,140 200,80 T400,100 T600,40 T800,120 T1000,20 L1000,200 L0,200 Z" fill="url(#chartGradient)"></path>
-            <path d="M0,150 Q100,140 200,80 T400,100 T600,40 T800,120 T1000,20" fill="none" stroke="#ec9513" strokeLinecap="round" strokeWidth="4" className="transition-all duration-1000"></path>
+            <path d={fillPath} fill="url(#chartGradient)"></path>
+            <path d={linePath} fill="none" stroke="#ec9513" strokeLinecap="round" strokeWidth="4" className="transition-all duration-1000"></path>
           </svg>
           <div className="absolute bottom-0 left-0 right-0 flex justify-between px-6 pt-4 text-[9px] font-black text-zinc-600 uppercase tracking-widest italic group-hover/inner:text-white transition-colors duration-1000">
-            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            {daysLabels.map((day, i) => (
+              <span key={i}>{day}</span>
+            ))}
           </div>
         </div>
       </div>
@@ -163,8 +222,12 @@ function InventoryRow({ name, category, sku, stock, price, status, image }: {
     <tr className="hover:bg-white/3 transition-all duration-500 group">
       <td className="px-10 py-6">
         <div className="flex items-center gap-6">
-          <div className="size-14 rounded-2xl bg-white/5 overflow-hidden border border-white/5 shrink-0 group-hover:scale-110 group-hover:border-primary/20 transition-all duration-700">
-            <Image src={image} alt={name} width={56} height={56} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="size-14 rounded-2xl bg-white/5 overflow-hidden border border-white/5 shrink-0 group-hover:scale-110 group-hover:border-primary/20 transition-all duration-700 relative">
+            <AdminImage 
+              src={image} 
+              alt={name} 
+              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+            />
           </div>
           <div className="space-y-1">
             <p className="font-serif font-black text-white italic group-hover:text-primary transition-colors">{name}</p>

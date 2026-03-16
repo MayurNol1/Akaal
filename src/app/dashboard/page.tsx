@@ -134,7 +134,7 @@ export default async function DashboardPage() {
             <div className="lg:col-span-2 space-y-10">
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-serif font-black text-white italic">Spiritual Path</h3>
-                <Link href="#" className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline underline-offset-4">Chronicles</Link>
+                <Link href="/orders" className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline underline-offset-4">Chronicles</Link>
               </div>
 
               <div className="relative space-y-0 before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-px before:bg-white/5">
@@ -174,10 +174,10 @@ export default async function DashboardPage() {
                 </div>
                 <div className="relative z-10 space-y-4">
                   <p className="font-serif font-black text-white italic">Path of Constant Presence</p>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">You are 4 days away from reaching your next milestone. Maintain your daily resonance ritual.</p>
-                  <button className="w-full py-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-background-dark transition-all duration-500 shadow-xl">
+                  <p className="text-[11px] text-zinc-500 leading-relaxed">Expand your vibration and discover new sacred artifacts for your collection.</p>
+                  <Link href="/products" className="block w-full py-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-background-dark transition-all duration-500 shadow-xl text-center">
                     Continue Journey
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

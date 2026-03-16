@@ -1,15 +1,45 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Filter, Edit2, Trash2, Eye, Package, Sparkles } from "lucide-react";
+import { Plus, Search, Filter, Edit2, Trash2, Eye, Package, Sparkles, AlertCircle } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+
+type ProductWithCategory = {
+  id: string;
+  name: string;
+  stock: number;
+  price: string | number | { toString(): string };
+  isActive: boolean;
+  imageUrl: string | null;
+  category: { name: string } | null;
+};
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<any[]>([]); // Keeping any temporarily as I don't have the Product type easily imported here without further checks, but I'll fix the rest
+  const searchParams = useSearchParams();
+  const [products, setProducts] = useState<ProductWithCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
+    const q = searchParams.get("search");
+    if (q) setSearch(q);
+  }, [searchParams]);
+
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(search.toLowerCase()) || 
+    p.category?.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const fetchProducts = () => {
+    setLoading(true);
     fetch('/api/products')
       .then(res => res.json())
       .then(response => {
@@ -20,10 +50,43 @@ export default function AdminProductsPage() {
         console.error("Failed to fetch products:", err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, []);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to return ${name} to the void?`)) return;
+
+    try {
+      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`${name} has been erased.`);
+        setProducts(products.filter(p => p.id !== id));
+      } else {
+        showToast(data.error || "Failed to erase artifact.", 'error');
+      }
+    } catch {
+      showToast("Ethereal connection failed.", 'error');
+    }
+  };
 
   return (
     <div className="space-y-12 animate-fade-in relative z-10">
+      {toast && (
+        <div className="fixed top-24 right-8 z-50 animate-in slide-in-from-right-5 fade-in duration-500">
+           <div className={`backdrop-blur-3xl border px-8 py-4 rounded-2xl flex items-center gap-4 shadow-2xl ${toast.type === 'success' ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
+              {toast.type === 'success' ? <Package size={20} /> : <AlertCircle size={20} />}
+              <div>
+                 <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Vault Ritual</p>
+                 <p className="text-xs text-white">{toast.message}</p>
+              </div>
+           </div>
+        </div>
+      )}
+
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
         <div className="space-y-4">
            <div className="h-px w-12 bg-primary/50" />
@@ -45,8 +108,10 @@ export default function AdminProductsPage() {
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600 group-hover:text-primary transition-colors duration-500" size={18} />
           <input 
             type="text" 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search artifacts by name or vibration..."
-            className="w-full bg-white/2 border border-white/5 rounded-[20px] py-4 pl-14 pr-6 focus:outline-none focus:border-primary/30 transition-all text-xs font-medium placeholder:text-zinc-800"
+            className="w-full bg-white/2 border border-white/5 rounded-[20px] py-4 pl-14 pr-6 focus:outline-none focus:border-primary/30 transition-all text-xs font-medium placeholder:text-zinc-800 text-white"
           />
         </div>
         <div className="flex gap-4 w-full md:w-auto">
@@ -70,7 +135,7 @@ export default function AdminProductsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <tr key={product.id} className="hover:bg-white/3 transition-all duration-500 group">
                 <td className="px-10 py-8">
                   <div className="flex items-center gap-6">
@@ -80,6 +145,7 @@ export default function AdminProductsPage() {
                           src={product.imageUrl} 
                           alt={product.name} 
                           fill 
+                          unoptimized
                           className="object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
                         />
                       ) : (
@@ -119,7 +185,10 @@ export default function AdminProductsPage() {
                     <Link href={`/admin/products/edit/${product.id}`} className="h-10 w-10 bg-white/5 flex items-center justify-center rounded-xl text-zinc-600 hover:text-primary hover:border-primary/20 border border-transparent transition-all">
                       <Edit2 size={14} />
                     </Link>
-                    <button className="h-10 w-10 bg-white/5 flex items-center justify-center rounded-xl text-zinc-600 hover:text-red-400 hover:border-red-400/20 border border-transparent transition-all">
+                    <button 
+                      onClick={() => handleDelete(product.id, product.name)}
+                      className="h-10 w-10 bg-white/5 flex items-center justify-center rounded-xl text-zinc-600 hover:text-red-400 hover:border-red-400/20 border border-transparent transition-all"
+                    >
                       <Trash2 size={14} />
                     </button>
                     <Link href={`/products/${product.id}`} className="h-10 w-10 bg-white/5 flex items-center justify-center rounded-xl text-zinc-600 hover:text-white hover:border-white/20 border border-transparent transition-all">

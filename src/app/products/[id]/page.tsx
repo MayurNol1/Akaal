@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { ProductService } from "@/modules/products/service";
 import { 
   ChevronRight,
-  Heart,
   ShieldCheck,
   Zap,
   Leaf,
@@ -13,6 +12,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { LikeButton } from "@/components/products/like-button";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -107,20 +107,18 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
               <div className="flex-1">
                 <AddToCartButton productId={product.id} />
               </div>
-              <button className="h-[60px] w-[60px] rounded-xl border border-primary/20 flex items-center justify-center text-primary hover:bg-primary/5 transition-all">
-                <Heart size={20} />
-              </button>
+              <LikeButton productId={product.id} />
             </div>
 
             {/* Accordions */}
             <div className="space-y-2">
               <ProductAccordion 
                 title="Spiritual Essence" 
-                content="This artifact is governed by cosmic principles that enhance mental peace, spiritual growth, and meditative focus." 
+                content={product.spiritualEssence || "This artifact is governed by cosmic principles that enhance mental peace, spiritual growth, and meditative focus."} 
               />
               <ProductAccordion 
                 title="Specifications" 
-                content="Hand-crafted using traditional methods. Each unit is unique in its physical manifestation yet identical in energy." 
+                content={product.specifications || "Hand-crafted using traditional methods. Each unit is unique in its physical manifestation yet identical in energy."} 
               />
             </div>
           </div>

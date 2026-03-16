@@ -24,6 +24,10 @@ export function CartPlaceholder({ className = "" }: { className?: string }) {
     };
     
     fetchCart();
+
+    // Listen to our custom event for cart updates
+    window.addEventListener("cart-updated", fetchCart);
+    return () => window.removeEventListener("cart-updated", fetchCart);
   }, [pathname]);
 
   if (count === 0) return null;

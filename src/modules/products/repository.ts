@@ -12,8 +12,14 @@ export class ProductRepository {
     });
   }
 
-  static async findMany(filters?: { categoryId?: string; isActive?: boolean; limit?: number }) {
-    const { limit, ...where } = filters || {};
+  static async findMany(filters?: { categoryId?: string; isActive?: boolean; limit?: number; ids?: string[] }) {
+    const { limit, ids, categoryId, isActive } = filters || {};
+    
+    const where: Prisma.ProductWhereInput = {};
+    if (ids) where.id = { in: ids };
+    if (categoryId) where.categoryId = categoryId;
+    if (isActive !== undefined) where.isActive = isActive;
+
     return prisma.product.findMany({
       where,
       take: limit,
