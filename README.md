@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Akal (Akaal) - Spiritual Artifacts Store
 
-## Getting Started
+A modern, full-stack eCommerce platform dedicated to spiritual artifacts, built with a focus on performance, security, and a premium user experience.
 
-First, run the development server:
+## ✨ Project Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Akal is a high-end web application designed to showcase and sell spiritual items. It features a comprehensive customer-facing storefront and a powerful administrative dashboard for managing the store's operations.
+
+## 🚀 Built With
+
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Database**: [Prisma ORM](https://www.prisma.io/) with PostgreSQL
+- **Authentication**: [Auth.js (NextAuth.js)](https://authjs.dev/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Payments**: [Stripe](https://stripe.com/) (Integration in progress)
+- **Validation**: [Zod](https://zod.dev/) & [React Hook Form](https://react-hook-form.com/)
+
+## 🛠️ Key Features
+
+### Storefront
+- **Dynamic Product Catalog**: Browse products with advanced sorting and pagination.
+- **Product Details**: Detailed views with descriptions, images, and pricing.
+- **Wishlist & Cart**: Personalize the shopping experience by saving favorite items.
+- **User Profiles**: Dashboard for customers to manage profiles and view order history.
+
+### Admin Dashboard
+- **Product Management**: Create, update, and manage the product inventory.
+- **User Management**: Overview and management of registered users.
+- **Orders & Tracking**: Manage customer orders and tracking status.
+- **Settings & Notifications**: Customizable site settings and real-time admin notifications.
+
+## 📁 Project Structure
+
+```text
+src/
+├── app/            # Application routes and pages (Next.js App Router)
+├── components/     # Reusable UI components (Admin, Cart, etc.)
+├── api/            # API endpoints for data fetching and processing
+├── lib/            # Utility functions and shared library code
+├── prisma/         # Database schema and migrations
+└── styles/         # Global styles and Tailwind configurations
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🏁 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js installed
+- A running PostgreSQL database instance
+- Environment variables configured in `.env` (Database URL, Auth secrets, etc.)
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. Clone the repository:
+   ```bash
+   git clone [repository-url]
+   cd akal
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Set up the database:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
 
-## Deploy on Vercel
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the results.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🛣️ Roadmap
+
+- [x] Initial design and layout
+- [x] Admin Panel Implementation
+- [x] Authentication & User Registration
+- [x] Product Listing & Details
+- [ ] Cart & Checkout Completion (Stripe integration)
+- [ ] Advanced Search & Filtering
+- [ ] Multi-language Support (Localization)
+
+## 📄 License
+
+This project is privately owned. All rights reserved.
