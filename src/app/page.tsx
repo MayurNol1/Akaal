@@ -1,12 +1,5 @@
 import Link from 'next/link';
 import Image from "next/image";
-import { 
-  Sparkles, 
-  ArrowRight,
-  Mail,
-  Share2,
-  Globe
-} from "lucide-react";
 
 import { ProductService } from "@/modules/products/service";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
@@ -16,7 +9,6 @@ import { NewsletterForm } from "@/components/home/newsletter-form";
 
 export const dynamic = "force-dynamic";
 
-// Define a safe local type for featured products mapping
 type FeaturedProduct = {
   id: string;
   name: string;
@@ -26,157 +18,294 @@ type FeaturedProduct = {
 };
 
 export default async function HomePage() {
-  const featuredProducts = await ProductService.getProducts({ isActive: true, limit: 3 });
+  const featuredProducts = await ProductService.getProducts({ isActive: true, limit: 6 });
   const categories = await prisma.category.findMany({
     take: 4,
     orderBy: { name: 'asc' }
   });
 
-
   return (
-    <div className="bg-background-dark text-white min-h-screen">
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+    <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", overflowX: "hidden" }}>
+      
+      {/* ── HERO ── */}
+      <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", paddingTop: "72px" }}>
         {/* Hero Background */}
-        <div className="absolute inset-0 z-0">
-          <Image 
-            src="https://images.unsplash.com/photo-1510250669225-3b91fa04db14?q=80&w=2070&auto=format&fit=crop" 
-            alt="Mystical Himalayan Mountains" 
-            fill 
-            className="object-cover opacity-40 scale-100 animate-slow-zoom"
-            priority
-          />
-          <div className="absolute inset-0 bg-linear-to-b from-background-dark/40 via-background-dark/60 to-background-dark" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0a0907_100%)] opacity-60" />
-        </div>
+        <div style={{ position: "absolute", inset: 0, zIndex: 0,
+          background: `
+            radial-gradient(ellipse 80% 60% at 50% 10%, rgba(212,169,74,0.06) 0%, transparent 70%),
+            radial-gradient(circle at 15% 80%, rgba(30,20,60,0.5) 0%, transparent 50%),
+            radial-gradient(circle at 85% 20%, rgba(20,10,40,0.6) 0%, transparent 50%),
+            linear-gradient(180deg, #10100e 0%, #130f18 50%, #10100e 100%)
+          `,
+        }} />
+        {/* Grain */}
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 1, opacity: 0.03,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+          backgroundSize: "200px 200px",
+        }} />
 
-        {/* Trishul Aura Backdrop */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none z-0">
-          <span className="material-symbols-outlined text-[600px] text-primary">architecture</span>
-        </div>
+        {/* Ornamental circle */}
+        <div style={{
+          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+          width: "min(700px, 90vw)", height: "min(700px, 90vw)",
+          borderRadius: "50%", border: "1px solid rgba(212,169,74,0.05)",
+          zIndex: 1, animation: "circle-pulse 8s ease-in-out infinite",
+        }} />
 
-        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto space-y-8 animate-fade-in">
-          <span className="text-primary font-bold tracking-[0.3em] uppercase text-xs mb-4 block">Ethereal Collections</span>
+        <div style={{ position: "relative", zIndex: 10, textAlign: "center", maxWidth: "760px", padding: "0 clamp(16px,4vw,48px)", display: "flex", flexDirection: "column", alignItems: "center", gap: "28px" }}>
           
-          <div className="space-y-6">
-            <h1 className="font-serif text-6xl md:text-8xl font-black text-white leading-tight mb-6 drop-shadow-2xl">
-              The Eternal <br /> 
-              <span className="text-white">Path</span>
-            </h1>
-            <p className="text-slate-300 text-lg md:text-xl font-light mb-10 max-w-2xl mx-auto leading-relaxed tracking-wide">
-              Experience the divine essence of Lord Mahadev through our curated selection of premium spiritual artifacts and sacred instruments.
-            </p>
+          {/* Eyebrow */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "10px",
+            padding: "7px 18px", borderRadius: "99px",
+            border: "1px solid rgba(212,169,74,0.12)",
+            background: "rgba(212,169,74,0.12)",
+            fontSize: "10px", fontWeight: 600,
+            letterSpacing: "0.25em", textTransform: "uppercase",
+            color: "#d4a94a",
+          }}>
+            <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#d4a94a", animation: "dot-blink 2s ease-in-out infinite" }} />
+            Sacred Spiritual Collections
           </div>
 
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Link
-              href="/products"
-              className="bg-primary text-background-dark font-bold px-10 py-5 rounded-xl hover:shadow-[0_0_20px_rgba(236,149,19,0.4)] transition-all transform hover:-translate-y-1 flex items-center gap-3 group text-xs uppercase tracking-widest text-center"
-            >
-              Shop Collections
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-            
-            <Link
-              href="/about"
-              className="bg-white/5 backdrop-blur-md border border-white/10 text-white font-bold px-10 py-5 rounded-xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest text-center"
-            >
-              Our Story
-            </Link>
-          </div>
-        </div>
-        
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-          <span className="material-symbols-outlined text-slate-500 text-3xl">expand_more</span>
-        </div>
-      </section>
+          {/* Title */}
+          <h1 style={{
+            fontFamily: "var(--font-serif), 'Cormorant Garamond', serif",
+            fontSize: "clamp(52px, 9vw, 96px)",
+            fontWeight: 300,
+            lineHeight: 1.05,
+            letterSpacing: "-0.02em",
+            color: "#f0ede6",
+            margin: 0,
+          }}>
+            The{" "}
+            <em style={{ fontStyle: "italic", color: "#d4a94a", fontWeight: 400 }}>Eternal</em>
+            <br />
+            <strong style={{ fontWeight: 700, fontStyle: "normal" }}>Sanctuary</strong>
+          </h1>
 
-      {/* Featured Products Section */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-          <div className="space-y-4">
-            <h3 className="font-serif text-4xl font-bold text-white mb-4">Featured Sacred Collections</h3>
-            <div className="h-1.5 w-24 bg-primary rounded-full" />
-          </div>
-          <Link href="/products" className="text-primary font-bold flex items-center gap-2 hover:gap-4 transition-all uppercase text-[10px] tracking-widest">
-            View All Artifacts <ArrowRight size={16} />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-           {featuredProducts.slice(0, 3).map((product: FeaturedProduct) => (
-             <ProductCard 
-               key={product.id}
-               id={product.id}
-               image={product.imageUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuBboiZGWGY25VY5ghi5zCQu-8-LW2SGbonewIxYNqbmWpZ8MMAREwVSOkOyLGpLs9MNzGtbM78ylOLxhGGlZ-nrGmmg2Lk7vLuG4z_NXgo-eQLeFEY0pkkTIzFmuSYG0b6054n2JA8HYW19DztyzSCHonr8UO1rNFCewnnfTi7qPJYvuLCKJEXdVYN5PSqApQnLKqrZwWU8AlvOGBJUzp_ECWYm0rHla7c4Ty_ue7lzKyBVy-urYbFz11wt47ZIqhWjSi3N58o_z0E"} 
-               title={product.name} 
-               price={`$${parseFloat(product.price.toString()).toFixed(2)}`} 
-               desc={product.description || "Authentic sacred item."}
-             />
-           ))}
-        </div>
-      </section>
-
-      {/* Subscription Section */}
-      <section className="py-24 bg-primary/5 border-y border-primary/10 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(236,149,19,0.05),transparent_70%)] pointer-events-none" />
-        <div className="max-w-4xl mx-auto px-6 text-center space-y-8 relative z-10">
-          <Sparkles className="mx-auto text-primary" size={48} />
-          <h2 className="font-serif text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">Join the Eternal Path</h2>
-          <p className="text-slate-400 text-lg mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-            Subscribe to receive spiritual insights, exclusive mantras, and early access to our most rare handcrafted collections.
+          {/* Subtitle */}
+          <p style={{ fontSize: "16px", fontWeight: 300, lineHeight: 1.75, color: "rgba(200,195,178,0.65)", maxWidth: "520px", textAlign: "center", margin: 0 }}>
+            Handcrafted spiritual artifacts, ethically sourced from the Himalayas — each piece energised with Prana Pratishtha before reaching your home.
           </p>
-          <NewsletterForm />
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", justifyContent: "center", paddingTop: "8px" }}>
+            <Link href="/products" style={{
+              display: "inline-flex", alignItems: "center", gap: "10px",
+              background: "#d4a94a", color: "#1a1006",
+              border: "none", textDecoration: "none",
+              fontSize: "12px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
+              padding: "15px 32px", borderRadius: "10px",
+              transition: "background 0.2s, box-shadow 0.2s, transform 0.15s",
+            }}>
+              Shop Collections
+              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>arrow_forward</span>
+            </Link>
+            <Link href="/about" style={{
+              display: "inline-flex", alignItems: "center", gap: "10px",
+              background: "transparent", color: "#f0ede6",
+              border: "1px solid rgba(255,255,255,0.05)", textDecoration: "none",
+              fontSize: "12px", fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase",
+              padding: "15px 32px", borderRadius: "10px",
+              transition: "border-color 0.2s, background 0.2s, transform 0.15s",
+            }}>
+              Our Philosophy
+            </Link>
+          </div>
+
+          {/* Stats */}
+          <div style={{
+            display: "flex", gap: "40px", paddingTop: "20px",
+            borderTop: "1px solid rgba(255,255,255,0.05)",
+            width: "100%", justifyContent: "center", flexWrap: "wrap",
+          }}>
+            {[
+              { num: "2,500+", label: "Sacred Items" },
+              { num: "45k+", label: "Devotees" },
+              { num: "12+", label: "Years" },
+            ].map(stat => (
+              <div key={stat.label} style={{ textAlign: "center" }}>
+                <span style={{
+                  fontFamily: "var(--font-serif)", fontSize: "30px", fontWeight: 600,
+                  color: "#d4a94a", lineHeight: 1, display: "block", marginBottom: "4px",
+                }}>{stat.num}</span>
+                <span style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(160,155,135,0.45)" }}>{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div style={{ position: "absolute", bottom: "32px", left: "50%", transform: "translateX(-50%)", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", opacity: 0.5 }}>
+          <span style={{ fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(160,155,135,0.45)" }}>Scroll</span>
+          <div style={{ width: "1px", height: "40px", background: "linear-gradient(to bottom, rgba(212,169,74,0.6), transparent)", animation: "scroll-drop 2s ease-in-out infinite" }} />
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-background-dark pt-24 pb-12 border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20">
-            <div className="col-span-1 md:col-span-1 space-y-8">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-4xl">flare</span>
-                <h1 className="font-serif text-2xl font-black tracking-tighter text-white uppercase">AKAAL</h1>
-              </div>
-              <p className="text-slate-500 text-sm leading-relaxed font-light">
-                Dedicated to bringing the essence of spiritual ancient wisdom into the modern home through ethically sourced sacred artifacts.
-              </p>
-              <div className="flex gap-4">
-                <SocialIcon icon={<Globe size={18} />} href="https://akal.com" />
-                <SocialIcon icon={<Mail size={18} />} href="mailto:sanctuary@akal.com" />
-                <SocialIcon icon={<Share2 size={18} />} href="#" />
-              </div>
+      {/* ── TRUST STRIP ── */}
+      <div style={{ background: "#161612", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "28px clamp(16px,4vw,48px)", display: "flex", alignItems: "center", justifyContent: "center", gap: "clamp(24px,4vw,60px)", flexWrap: "wrap" }}>
+          {[
+            { icon: "verified", label: "Lab Certified Authenticity" },
+            { icon: "autorenew", label: "30-Day Easy Returns" },
+            { icon: "local_shipping", label: "Free Shipping ₹999+" },
+            { icon: "spa", label: "Energised Before Dispatch" },
+          ].map(item => (
+            <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "rgba(200,195,178,0.65)" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "18px", opacity: 0.7, color: "#d4a94a" }}>{item.icon}</span>
+              {item.label}
             </div>
-            
-            <FooterColumn 
-              title="Shop" 
-              links={categories.map((c: Category) => ({ label: c.name, href: `/products?category=${c.id}` }))} 
-            />
-            <FooterColumn 
-              title="Wisdom Center" 
-              links={[
-                { label: "Our Story", href: "/about" },
-                { label: "Spiritual Path", href: "/dashboard" },
-                { label: "Sacred Wishes", href: "/wishlist" }
-              ]} 
-            />
-            <FooterColumn 
-              title="Support" 
-              links={[
-                { label: "My Orders", href: "/orders" },
-                { label: "Privacy Sanctuary", href: "/settings" },
-                { label: "Contact Us", href: "mailto:support@akal.com" }
-              ]} 
-            />
+          ))}
+        </div>
+      </div>
+
+      {/* ── FEATURED PRODUCTS ── */}
+      <section style={{ padding: "clamp(60px,8vw,120px) clamp(16px,4vw,48px)", maxWidth: "1280px", margin: "0 auto" }}>
+        <div style={{ marginBottom: "clamp(40px,5vw,72px)" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "24px", flexWrap: "wrap" }}>
+            <div>
+              <span style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#d4a94a", marginBottom: "12px", display: "block" }}>
+                Curated for You
+              </span>
+              <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(32px,4vw,52px)", fontWeight: 400, lineHeight: 1.15, color: "#f0ede6", margin: 0 }}>
+                Sacred <em style={{ fontStyle: "italic", color: "#d4a94a" }}>Collections</em>
+              </h2>
+            </div>
+            <Link href="/products" style={{
+              fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
+              color: "#d4a94a", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px",
+              whiteSpace: "nowrap",
+            }}>
+              View All <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_forward</span>
+            </Link>
           </div>
-          
-          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-4 text-slate-600 text-[10px] font-bold uppercase tracking-widest">
-              <span>© 2026 Akaal Spiritual Collections. All rights reserved.</span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" }}>
+          {featuredProducts.slice(0, 6).map((product: FeaturedProduct) => (
+            <ProductCard
+              key={product.id}
+              id={product.id}
+              image={product.imageUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuBfdsGV6aNSxqvazDqkT7tcstkj-L8oBUe0ArkfkL_J5tK7luTCM_4wySIyuD9UHwMC-s0nSNtfVbkjLMGeJh6orSysXUnN2IupfunTPLUsRWpn_oUQ-XiMJf0vlu1kUeJWz8zam4yxxQeRmen33focXfDToKydsGGagolfpwG23ZawDPMFO_fja2VkIzAfVDlq9ZAE0641Ymy3cSzBwbI6R-FbGRunWxNcH6Gz2qtWECZcSBDN5nZj2d55dksrBVFO3-B05fvwoV4"}
+              title={product.name}
+              price={`₹${parseFloat(product.price.toString()).toFixed(0)}`}
+              desc={product.description || "Authentic sacred item from the Himalayas."}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* ── CATEGORIES ── */}
+      {categories.length > 0 && (
+        <section style={{ padding: "clamp(60px,8vw,120px) clamp(16px,4vw,48px)", maxWidth: "1280px", margin: "0 auto" }}>
+          <div style={{ marginBottom: "clamp(40px,5vw,72px)" }}>
+            <span style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#d4a94a", marginBottom: "12px", display: "block" }}>
+              Browse By
+            </span>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(32px,4vw,52px)", fontWeight: 400, lineHeight: 1.15, color: "#f0ede6", margin: 0 }}>
+              Our <em style={{ fontStyle: "italic", color: "#d4a94a" }}>Categories</em>
+            </h2>
+          </div>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            {categories.map((cat: Category) => (
+              <Link key={cat.id} href={`/products?category=${cat.id}`} style={{
+                padding: "10px 22px", borderRadius: "99px",
+                fontSize: "11px", fontWeight: 500, letterSpacing: "0.08em",
+                textTransform: "uppercase", textDecoration: "none",
+                border: "1px solid rgba(255,255,255,0.05)",
+                color: "rgba(200,195,178,0.65)",
+                background: "transparent",
+                transition: "all 0.2s",
+              }}>
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── NEWSLETTER ── */}
+      <section style={{ padding: "clamp(60px,8vw,120px) clamp(16px,4vw,48px)", maxWidth: "1280px", margin: "0 auto" }}>
+        <div style={{
+          background: "#161612",
+          border: "1px solid rgba(255,255,255,0.05)",
+          borderRadius: "32px",
+          padding: "clamp(40px,6vw,80px) clamp(24px,5vw,72px)",
+          textAlign: "center", position: "relative", overflow: "hidden",
+        }}>
+          <div style={{
+            position: "absolute", top: "-60px", left: "50%", transform: "translateX(-50%)",
+            width: "300px", height: "300px", borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(212,169,74,0.08), transparent 70%)",
+            pointerEvents: "none",
+          }} />
+          <span style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#d4a94a", marginBottom: "12px", display: "block" }}>
+            Stay Connected
+          </span>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(32px,4vw,44px)", fontWeight: 400, color: "#f0ede6", marginBottom: "16px" }}>
+            Join the <em style={{ fontStyle: "italic", color: "#d4a94a" }}>Eternal Path</em>
+          </h2>
+          <p style={{ fontSize: "15px", fontWeight: 300, lineHeight: 1.7, color: "rgba(200,195,178,0.65)", maxWidth: "480px", margin: "0 auto" }}>
+            Subscribe to receive spiritual insights, exclusive mantras, and early access to our rarest collections.
+          </p>
+          <div style={{ display: "flex", gap: "10px", maxWidth: "480px", margin: "32px auto 0", flexWrap: "wrap", justifyContent: "center" }}>
+            <NewsletterForm />
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "clamp(48px,6vw,88px) clamp(16px,4vw,48px) clamp(24px,3vw,40px)" }}>
+        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "clamp(24px,4vw,60px)", marginBottom: "clamp(32px,4vw,60px)" }}>
+            
+            {/* Brand column */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+                <svg width="24" height="24" viewBox="0 0 48 48" fill="#d4a94a">
+                  <path d="M8.578 8.578C5.528 11.628 3.451 15.515 2.61 19.745 1.768 23.976 2.2 28.361 3.85 32.346 5.501 36.331 8.297 39.738 11.883 42.134 15.47 44.53 19.686 45.81 24 45.81c4.313 0 8.53-1.28 12.117-3.676 3.586-2.396 6.382-5.803 8.033-9.788 1.65-3.985 2.082-8.37 1.241-12.601-.842-4.23-2.919-8.117-5.969-11.167L24 24 8.578 8.578Z"/>
+                </svg>
+                <span style={{ fontFamily: "var(--font-serif)", fontSize: "19px", fontWeight: 700, letterSpacing: "0.1em", color: "#f0ede6" }}>AKAAL</span>
+              </Link>
+              <p style={{ fontSize: "13px", fontWeight: 300, lineHeight: 1.7, color: "rgba(160,155,135,0.45)", maxWidth: "260px" }}>
+                Dedicated to bringing sacred ancient wisdom into the modern home through ethically sourced spiritual artifacts.
+              </p>
+              <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                {["language", "mail", "share"].map(icon => (
+                  <a key={icon} href="#" style={{
+                    width: "36px", height: "36px", borderRadius: "8px",
+                    background: "#161612", border: "1px solid rgba(255,255,255,0.05)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "15px", textDecoration: "none", color: "rgba(200,195,178,0.65)",
+                    transition: "border-color 0.2s, background 0.2s",
+                  }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>{icon}</span>
+                  </a>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-6 opacity-30">
-              <span className="material-symbols-outlined text-4xl text-white">architecture</span>
+
+            <FooterColumn title="Shop" links={categories.map((c: Category) => ({ label: c.name, href: `/products?category=${c.id}` }))} />
+            <FooterColumn title="Explore" links={[
+              { label: "Our Story", href: "/about" },
+              { label: "Wishlist", href: "/wishlist" },
+              { label: "Dashboard", href: "/dashboard" },
+            ]} />
+            <FooterColumn title="Support" links={[
+              { label: "My Orders", href: "/orders" },
+              { label: "Settings", href: "/settings" },
+              { label: "Contact Us", href: "mailto:support@akal.com" },
+            ]} />
+          </div>
+
+          <div style={{ paddingTop: "24px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+            <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)" }}>© 2026 Akaal Spiritual Arts. All rights reserved.</p>
+            <div style={{ display: "flex", gap: "20px" }}>
+              {["Privacy Policy", "Terms of Service", "Support"].map(item => (
+                <a key={item} href="#" style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", textDecoration: "none", transition: "color 0.2s" }}>{item}</a>
+              ))}
             </div>
           </div>
         </div>
@@ -185,50 +314,65 @@ export default async function HomePage() {
   );
 }
 
-function ProductCard({ id, image, title, price, desc }: { id: string, image: string, title: string, price: string, desc: string }) {
+function ProductCard({ id, image, title, price, desc }: { id: string; image: string; title: string; price: string; desc: string }) {
   return (
-    <div className="group relative bg-white/5 border border-primary/10 rounded-2xl p-5 transition-all hover:border-primary/40 hover:bg-white/10 flex flex-col items-center text-center">
-      <Link href={`/products/${id}`} className="aspect-square w-full rounded-xl overflow-hidden mb-6 bg-background-dark border border-white/5 relative block">
-        <Image 
-          src={image} 
-          alt={title} 
-          fill 
-          className="object-cover transition-transform duration-700 group-hover:scale-110" 
-        />
+    <div style={{
+      background: "#161612",
+      border: "1px solid rgba(212,169,74,0.1)",
+      borderRadius: "14px",
+      overflow: "hidden",
+      display: "flex", flexDirection: "column",
+      transition: "transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease",
+      cursor: "pointer", position: "relative",
+    }}
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.transform = "translateY(-4px)";
+        el.style.boxShadow = "0 16px 40px rgba(0,0,0,0.4)";
+        el.style.borderColor = "rgba(212,169,74,0.2)";
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.transform = "translateY(0)";
+        el.style.boxShadow = "none";
+        el.style.borderColor = "rgba(212,169,74,0.1)";
+      }}
+    >
+      <Link href={`/products/${id}`} style={{ aspectRatio: "1", position: "relative", overflow: "hidden", background: "#1c1c18", display: "block" }}>
+        <Image src={image} alt={title} fill className="object-cover transition-transform duration-500" />
       </Link>
-      <div className="w-full space-y-3">
-        <div className="flex justify-between items-center px-1">
-          <Link href={`/products/${id}`}>
-            <h4 className="text-xl font-serif font-bold text-white group-hover:text-primary transition-colors">{title}</h4>
-          </Link>
-          <span className="text-primary font-black text-lg">{price}</span>
-        </div>
-        <p className="text-slate-400 text-sm leading-relaxed font-light px-1 line-clamp-2">{desc}</p>
-        <div className="mt-4">
-           <AddToCartButton productId={id} />
+      <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+        <span style={{ fontSize: "9px", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(212,169,74,0.6)" }}>Spiritual Artifact</span>
+        <Link href={`/products/${id}`} style={{ textDecoration: "none" }}>
+          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 600, lineHeight: 1.25, color: "#f0ede6", margin: 0, transition: "color 0.2s" }}>
+            {title}
+          </h3>
+        </Link>
+        <p style={{ fontSize: "13px", fontWeight: 300, lineHeight: 1.65, color: "rgba(200,195,178,0.65)", margin: 0 }}>
+          {desc}
+        </p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <span style={{ fontFamily: "var(--font-serif)", fontSize: "22px", fontWeight: 600, color: "#d4a94a", letterSpacing: "-0.01em" }}>{price}</span>
+          <AddToCartButton productId={id} />
         </div>
       </div>
     </div>
   );
 }
 
-function FooterColumn({ title, links }: { title: string, links: { label: string, href: string }[] }) {
+function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
-    <div className="space-y-8">
-      <h5 className="text-white font-bold uppercase text-xs tracking-widest">{title}</h5>
-      <ul className="space-y-4 text-sm text-slate-500 font-light">
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <h5 style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "#f0ede6", margin: 0 }}>{title}</h5>
+      <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "12px", padding: 0, margin: 0 }}>
         {links.map(link => (
-          <li key={link.label}><Link href={link.href} className="hover:text-primary transition-colors">{link.label}</Link></li>
+          <li key={link.label}>
+            <Link href={link.href} style={{ fontSize: "13px", fontWeight: 300, color: "rgba(160,155,135,0.45)", textDecoration: "none", transition: "color 0.2s" }}>
+              {link.label}
+            </Link>
+          </li>
         ))}
       </ul>
     </div>
-  );
-}
-
-function SocialIcon({ icon, href }: { icon: React.ReactNode, href: string }) {
-  return (
-    <Link href={href} className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-primary transition-colors border border-white/5 group">
-      {icon}
-    </Link>
   );
 }

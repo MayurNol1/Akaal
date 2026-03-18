@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import { Loader2, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { CartPlaceholder } from "@/components/cart/cart-placeholder";
 import { WishlistCount } from "@/components/products/wishlist-count";
@@ -13,152 +12,277 @@ export function Navbar() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Close mobile menu on route change
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      setIsMobileMenuOpen(false);
-    }
-  }, [pathname, isMobileMenuOpen]);
+    if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
-  // Hide global navbar on specialized pages (Auth, Dashboard, Admin)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/register");
   const isManagementPage = pathname?.startsWith("/admin");
 
   if (isAuthPage || isManagementPage) return null;
 
+  const navLinks = [
+    { href: "/products", label: "Collections" },
+    { href: "/about", label: "About" },
+    ...(session ? [
+      { href: "/orders", label: "Orders" },
+      { href: "/dashboard", label: "Profile" },
+    ] : []),
+  ];
+
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background-dark/70 backdrop-blur-xl border-b border-primary/10 transition-all duration-500">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-12">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="material-symbols-outlined text-primary text-3xl group-hover:rotate-90 transition-transform duration-500">flare</span>
-              <h1 className="font-serif text-2xl font-black tracking-tighter text-white">AKAAL</h1>
-            </Link>
-            <div className="hidden md:flex items-center gap-8 border-l border-white/5 pl-8">
-              <Link className="text-sm font-medium text-slate-400 hover:text-primary transition-colors uppercase tracking-widest text-[10px]" href="/products">Products</Link>
-              <Link className="text-sm font-medium text-slate-400 hover:text-primary transition-colors uppercase tracking-widest text-[10px]" href="/about">About</Link>
-              {session && (
-                <>
-                  <Link className="text-sm font-medium text-slate-400 hover:text-primary transition-colors uppercase tracking-widest text-[10px]" href="/orders">Orders</Link>
-                  <Link className="text-sm font-medium text-slate-400 hover:text-primary transition-colors uppercase tracking-widest text-[10px]" href="/dashboard">Profile</Link>
-                </>
-              )}
+      <nav
+        style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+          height: "72px",
+          display: "flex", alignItems: "center",
+          padding: "0 clamp(16px, 4vw, 48px)",
+          background: scrolled ? "rgba(16,16,14,0.95)" : "rgba(16,16,14,0.75)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          transition: "background 0.3s",
+        }}
+      >
+        {/* Gold line accent */}
+        <span style={{
+          position: "absolute", bottom: 0, left: "5%", right: "5%", height: "1px",
+          background: "linear-gradient(90deg, transparent, rgba(212,169,74,0.2), transparent)",
+          pointerEvents: "none",
+        }} />
+
+        <div style={{
+          width: "100%", maxWidth: "1280px", margin: "0 auto",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: "24px",
+        }}>
+          {/* Logo */}
+          <Link href="/" style={{
+            display: "flex", alignItems: "center", gap: "10px", textDecoration: "none",
+            transition: "opacity 0.2s",
+          }}>
+            <div style={{
+              width: "36px", height: "36px",
+              background: "rgba(212,169,74,0.12)",
+              border: "1px solid rgba(212,169,74,0.12)",
+              borderRadius: "10px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "16px",
+            }}>
+              <svg width="20" height="20" viewBox="0 0 48 48" fill="#d4a94a">
+                <path d="M8.578 8.578C5.528 11.628 3.451 15.515 2.61 19.745 1.768 23.976 2.2 28.361 3.85 32.346 5.501 36.331 8.297 39.738 11.883 42.134 15.47 44.53 19.686 45.81 24 45.81c4.313 0 8.53-1.28 12.117-3.676 3.586-2.396 6.382-5.803 8.033-9.788 1.65-3.985 2.082-8.37 1.241-12.601-.842-4.23-2.919-8.117-5.969-11.167L24 24 8.578 8.578Z"/>
+              </svg>
             </div>
+            <span style={{
+              fontFamily: "var(--font-serif), 'Cormorant Garamond', serif",
+              fontSize: "18px", fontWeight: 700,
+              letterSpacing: "0.12em",
+              color: "#f0ede6",
+            }}>AKAAL</span>
+          </Link>
+
+          {/* Desktop nav links */}
+          <div style={{ display: "flex", alignItems: "center", gap: "32px" }} className="hidden md:flex">
+            {navLinks.map(({ href, label }) => (
+              <Link key={href} href={href} style={{
+                fontSize: "11px", fontWeight: 500,
+                letterSpacing: "0.12em", textTransform: "uppercase",
+                color: pathname === href ? "#d4a94a" : "rgba(200,195,178,0.65)",
+                textDecoration: "none",
+                transition: "color 0.2s",
+                paddingBottom: "2px",
+                borderBottom: pathname === href ? "1px solid #d4a94a" : "1px solid transparent",
+              }}>
+                {label}
+              </Link>
+            ))}
           </div>
 
-          <div className="flex items-center gap-2 md:gap-6">
-            <form action="/products" className="relative hidden xl:block">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
-              <input 
+          {/* Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            {/* Search */}
+            <form action="/products" className="hidden xl:flex" style={{
+              alignItems: "center",
+              background: "rgba(212,169,74,0.04)",
+              border: "1px solid rgba(212,169,74,0.1)",
+              borderRadius: "8px", padding: "0 12px", height: "34px", gap: "6px",
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "rgba(160,155,135,0.45)" }}>search</span>
+              <input
                 name="query"
-                className="bg-white/5 border border-white/10 rounded-full py-2.5 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary focus:border-primary w-48 text-white placeholder-slate-600 outline-none transition-all focus:w-64" 
-                placeholder="Search resonance..." 
+                style={{
+                  background: "none", border: "none", outline: "none",
+                  fontSize: "12px", color: "#f0ede6", width: "130px",
+                  fontFamily: "var(--font-sans)",
+                }}
+                placeholder="Search…"
                 type="text"
               />
             </form>
 
-            <div className="flex items-center gap-1 md:gap-4">
-              <Link href="/wishlist" className="relative p-2 text-primary hover:scale-110 transition-transform flex items-center group">
-                <span className="material-symbols-outlined text-2xl group-hover:fill-current" style={{ fontVariationSettings: "'FILL' 0" }}>favorite</span>
-                <WishlistCount />
-              </Link>
+            {/* Divider */}
+            <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.05)", margin: "0 4px" }} />
 
-              <Link href="/cart" className="relative p-2 text-primary hover:scale-110 transition-transform flex items-center">
-                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>shopping_cart</span>
-                <CartPlaceholder />
-              </Link>
+            {/* Wishlist */}
+            <Link href="/wishlist" style={{
+              width: "40px", height: "40px", borderRadius: "10px",
+              background: "transparent", border: "none",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "rgba(200,195,178,0.65)", fontSize: "20px",
+              transition: "color 0.2s, background 0.2s",
+              textDecoration: "none", position: "relative",
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#d4a94a"; (e.currentTarget as HTMLElement).style.background = "rgba(212,169,74,0.12)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(200,195,178,0.65)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>favorite_border</span>
+              <WishlistCount />
+            </Link>
 
-              <div className="h-4 w-px bg-white/10 mx-2 hidden md:block" />
+            {/* Cart */}
+            <Link href="/cart" style={{
+              width: "40px", height: "40px", borderRadius: "10px",
+              background: "transparent", border: "none",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "rgba(200,195,178,0.65)", fontSize: "20px",
+              transition: "color 0.2s, background 0.2s",
+              textDecoration: "none", position: "relative",
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#d4a94a"; (e.currentTarget as HTMLElement).style.background = "rgba(212,169,74,0.12)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(200,195,178,0.65)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>shopping_bag</span>
+              <CartPlaceholder />
+            </Link>
 
-              {status === "loading" ? (
-                <Loader2 className="w-5 h-5 text-zinc-500 animate-spin" />
-              ) : session ? (
-                <div className="hidden md:flex items-center gap-4">
-                  {session.user?.role === "ADMIN" && (
-                      <Link
-                        href="/admin"
-                        className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary border border-primary/20 px-4 py-2 rounded-full bg-primary/5 hover:bg-primary/10 transition-all animate-pulse"
-                      >
-                        Admin
-                      </Link>
-                    )}
-                    <Link href="/dashboard" title="Profile Dashboard" className="h-9 w-9 rounded-full border border-primary/30 overflow-hidden cursor-pointer hover:border-primary transition-colors relative shadow-2xl">
-                      <Image 
-                        className="object-cover" 
-                        src={session.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDb9HxOmlluH2qUdJkJzGw0kBx49GCM0HpWK5hrJJE0zuqXExpKlTBAIgmxzvVgRKw6Ny46fqG9KIj4nLjOjB-ljAg2W6oXuI0cqCnyI1s9AgrsQRY0iHEb5g08VHRGOVW0iXh30dhVPSLnLCcyiOPTdtwdEKkinVMq3kovK6x2Vh18D0OxW5Mmkis_2TtVZpYMUI9fX2O5On1dIcDKT-3nbj64A56WkBYyMkz_dXUaIAvDxPLjRwbrDUqjz6p4febEV8uKJtS0sA4"} 
-                        alt="User profile"
-                        fill
-                      />
-                    </Link>
-                    <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                      title="Sever Connection"
-                      className="p-2 text-zinc-500 hover:text-red-400 transition-colors rounded-full hover:bg-red-400/5 group"
-                    >
-                      <LogOut size={16} className="group-hover:rotate-12 transition-transform" />
-                    </button>
-                </div>
-              ) : (
-                <Link
-                  href="/login"
-                  className="hidden md:block bg-primary text-background-dark px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white transition-all shadow-xl shadow-primary/5 active:scale-95"
-                >
-                  Enter
-                </Link>
-              )}
-
-              {/* Mobile Toggle */}
-              <button 
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
-                aria-label="Toggle menu"
+            {/* Auth CTA */}
+            {status !== "loading" && !session ? (
+              <Link href="/login" style={{
+                background: "#d4a94a", color: "#1a1006",
+                border: "none", cursor: "pointer",
+                fontSize: "11px", fontWeight: 600,
+                letterSpacing: "0.12em", textTransform: "uppercase",
+                padding: "9px 20px", borderRadius: "8px",
+                textDecoration: "none",
+                transition: "background 0.2s, transform 0.15s, box-shadow 0.2s",
+                display: "inline-flex", alignItems: "center",
+                marginLeft: "4px",
+              }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#e8c06c"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#d4a94a"; }}
               >
-                <span className="material-symbols-outlined text-3xl">
-                  {isMobileMenuOpen ? "close" : "menu"}
-                </span>
-              </button>
-            </div>
+                Sign In
+              </Link>
+            ) : session ? (
+              <div className="hidden md:flex items-center gap-2">
+                {session.user?.role === "ADMIN" && (
+                  <Link href="/admin" style={{
+                    fontSize: "10px", fontWeight: 700,
+                    letterSpacing: "0.12em", textTransform: "uppercase",
+                    color: "#d4a94a", textDecoration: "none",
+                    padding: "6px 12px", borderRadius: "8px",
+                    background: "rgba(212,169,74,0.08)", border: "1px solid rgba(212,169,74,0.2)",
+                  }}>Admin</Link>
+                )}
+                <Link href="/dashboard" style={{
+                  width: "34px", height: "34px", borderRadius: "50%",
+                  border: "2px solid rgba(212,169,74,0.3)",
+                  overflow: "hidden", cursor: "pointer", position: "relative",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "border-color 0.2s",
+                }}>
+                  <Image
+                    src={session.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDb9HxOmlluH2qUdJkJzGw0kBx49GCM0HpWK5hrJJE0zuqXExpKlTBAIgmxzvVgRKw6Ny46fqG9KIj4nLjOjB-ljAg2W6oXuI0cqCnyI1s9AgrsQRY0iHEb5g08VHRGOVW0iXh30dhVPSLnLCcyiOPTdtwdEKkinVMq3kovK6x2Vh18D0OxW5Mmkis_2TtVZpYMUI9fX2O5On1dIcDKT-3nbj64A56WkBYyMkz_dXUaIAvDxPLjRwbrDUqjz6p4febEV8uKJtS0sA4"}
+                    alt="Profile" fill className="object-cover"
+                  />
+                </Link>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  style={{
+                    width: "34px", height: "34px", borderRadius: "8px",
+                    background: "transparent", border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "rgba(160,155,135,0.45)", transition: "color 0.2s",
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#f87171"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(160,155,135,0.45)"; }}
+                  title="Sign out"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>logout</span>
+                </button>
+              </div>
+            ) : null}
+
+            {/* Mobile Toggle */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              style={{
+                width: "40px", height: "40px", borderRadius: "10px",
+                background: "transparent", border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "rgba(200,195,178,0.65)",
+              }}
+              className="md:hidden"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
+                {isMobileMenuOpen ? "close" : "menu"}
+              </span>
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
-      <div className={`fixed inset-0 z-40 md:hidden transition-all duration-700 ${isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-        <div className="absolute inset-0 bg-background-dark/95 backdrop-blur-3xl" onClick={() => setIsMobileMenuOpen(false)} />
-        <div className={`absolute left-0 right-0 top-20 bg-background-dark border-b border-primary/10 p-10 space-y-8 transition-transform duration-700 ${isMobileMenuOpen ? "translate-y-0" : "-translate-y-20 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"}`}>
-          <div className="flex flex-col gap-8">
-            <Link className="text-2xl font-serif font-black text-white hover:text-primary transition-colors" href="/products">Products</Link>
-            <Link className="text-2xl font-serif font-black text-white hover:text-primary transition-colors" href="/about">About Story</Link>
-            {session && (
-              <>
-                <Link className="text-2xl font-serif font-black text-white hover:text-primary transition-colors" href="/orders">Manifest Logs</Link>
-                <Link className="text-2xl font-serif font-black text-white hover:text-primary transition-colors" href="/dashboard">Spiritual Desk</Link>
-              </>
-            )}
-            
-            <div className="h-px w-full bg-white/5" />
-            
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 90,
+          background: "rgba(16,16,14,0.97)", backdropFilter: "blur(20px)",
+          paddingTop: "80px", paddingLeft: "24px", paddingRight: "24px",
+        }} className="md:hidden">
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px", paddingTop: "32px" }}>
+            {navLinks.map(({ href, label }) => (
+              <Link key={href} href={href} onClick={() => setIsMobileMenuOpen(false)} style={{
+                fontFamily: "var(--font-serif), 'Cormorant Garamond', serif",
+                fontSize: "28px", fontWeight: 600, color: "#f0ede6",
+                textDecoration: "none", transition: "color 0.2s",
+              }}>
+                {label}
+              </Link>
+            ))}
+            <div style={{ height: "1px", background: "rgba(212,169,74,0.1)", margin: "8px 0" }} />
             {session ? (
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl border border-primary/30 overflow-hidden relative">
-                    <Image src={session.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDb9HxOmlluH2qUdJkJzGw0kBx49GCM0HpWK5hrJJE0zuqXExpKlTBAIgmxzvVgRKw6Ny46fqG9KIj4nLjOjB-ljAg2W6oXuI0cqCnyI1s9AgrsQRY0iHEb5g08VHRGOVW0iXh30dhVPSLnLCcyiOPTdtwdEKkinVMq3kovK6x2Vh18D0OxW5Mmkis_2TtVZpYMUI9fX2O5On1dIcDKT-3nbj64A56WkBYyMkz_dXUaIAvDxPLjRwbrDUqjz6p4febEV8uKJtS0sA4"} alt="User" fill className="object-cover" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-widest text-white">{session.user?.name}</p>
-                    <p className="text-[10px] text-zinc-500">{session.user?.email}</p>
-                  </div>
-                </div>
-                <button onClick={() => signOut()} className="w-full py-5 bg-white/5 text-red-400 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-400/10">Disconnect Sanctuary</button>
-              </div>
+              <button onClick={() => signOut()} style={{
+                padding: "14px", background: "rgba(255,255,255,0.03)",
+                color: "#f87171", borderRadius: "10px",
+                border: "1px solid rgba(248,113,113,0.15)",
+                fontSize: "12px", fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: "0.1em", cursor: "pointer",
+              }}>
+                Sign Out
+              </button>
             ) : (
-              <Link href="/login" className="w-full py-5 bg-primary text-background-dark text-center rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl">Enter Sanctuary</Link>
+              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} style={{
+                padding: "14px", background: "#d4a94a",
+                color: "#1a1006", borderRadius: "10px",
+                fontSize: "12px", fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: "0.1em", textAlign: "center", textDecoration: "none",
+                display: "block",
+              }}>
+                Sign In
+              </Link>
             )}
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

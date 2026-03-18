@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { CartService } from "@/modules/cart/service";
-import { ChevronLeft, ShieldCheck, Lock, Sparkles, MoveRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -10,18 +9,16 @@ export default async function CheckoutPage() {
 
   if (!session?.user?.id) {
     return (
-      <div className="bg-background-dark min-h-screen flex items-center justify-center text-white p-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(236,149,19,0.05),transparent_70%)]" />
-        <div className="max-w-md w-full bg-white/2 p-12 rounded-3xl border border-white/5 text-center space-y-8 animate-fade-in relative z-10">
-          <h1 className="text-3xl font-serif italic text-primary">Identity Required</h1>
-          <p className="text-zinc-500 text-sm leading-relaxed font-light tracking-wide">
-            To complete this manifestation, we must verify your presence in the sanctuary.
-          </p>
-          <Link
-            href="/login"
-            className="block w-full py-5 rounded-2xl bg-primary text-background-dark text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all duration-500 shadow-2xl"
-          >
-            Sign In to Proceed
+      <div style={{ background: "#10100e", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+        <div style={{ maxWidth: "400px", width: "100%", textAlign: "center", background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "24px", padding: "56px 40px" }}>
+          <div style={{ width: "72px", height: "72px", borderRadius: "20px", background: "rgba(212,169,74,0.08)", border: "1px solid rgba(212,169,74,0.14)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "32px", color: "#d4a94a" }}>lock</span>
+          </div>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "26px", fontWeight: 600, color: "#f0ede6", marginBottom: "10px" }}>Sign In to Checkout</h1>
+          <p style={{ fontSize: "13px", color: "rgba(160,155,135,0.45)", lineHeight: 1.6, marginBottom: "28px" }}>Please sign in to complete your purchase securely.</p>
+          <Link href="/login" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: "#d4a94a", color: "#10100e", borderRadius: "10px", padding: "13px 28px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>login</span>
+            Sign In
           </Link>
         </div>
       </div>
@@ -29,164 +26,200 @@ export default async function CheckoutPage() {
   }
 
   const cart = await CartService.getCart(session.user.id);
-  const items = cart?.items ?? [];
-  const subtotal = items.reduce((sum: number, item: any) => {
-    const priceNumber = Number(item.product.price);
-    return sum + priceNumber * item.quantity;
-  }, 0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const items = (cart as any)?.items ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const subtotal = items.reduce((sum: number, item: any) => sum + Number(item.product.price) * item.quantity, 0);
+  const shipping = subtotal >= 999 ? 0 : 99;
+  const tax = subtotal * 0.05;
+  const total = subtotal + shipping + tax;
 
   return (
-    <div className="bg-background-dark min-h-screen pb-40 text-white">
-      <div className="h-32" />
-      <div className="max-w-7xl mx-auto px-6 space-y-16">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
-          <div className="space-y-4">
-             <div className="h-px w-10 bg-primary" />
-             <h1 className="text-5xl md:text-6xl font-serif font-black tracking-tight leading-tight">
-               Final <span className="text-primary italic">Manifestation</span>
-             </h1>
-             <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.45em]">The Transition Toward Possession</p>
-          </div>
-          <Link
-            href="/cart"
-            className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-primary transition-colors flex items-center gap-3 group"
-          >
-            <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            Vessel Returns
-          </Link>
+    <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px" }}>
+      <div style={{ maxWidth: "1180px", margin: "0 auto", padding: "48px clamp(16px,4vw,48px) 80px" }}>
+
+        {/* Breadcrumb */}
+        <nav style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "rgba(160,155,135,0.45)", marginBottom: "32px" }}>
+          <Link href="/" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Home</Link>
+          <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>chevron_right</span>
+          <Link href="/cart" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Cart</Link>
+          <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>chevron_right</span>
+          <span style={{ color: "#d4a94a" }}>Checkout</span>
+        </nav>
+
+        {/* Progress Steps */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0", marginBottom: "40px", maxWidth: "480px" }}>
+          {[
+            { step: 1, label: "Cart", done: true },
+            { step: 2, label: "Checkout", active: true },
+            { step: 3, label: "Confirmation", done: false },
+          ].map((s, i) => (
+            <div key={s.step} style={{ display: "flex", alignItems: "center", flex: i < 2 ? 1 : "none" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{
+                  width: "28px", height: "28px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "11px", fontWeight: 700,
+                  background: s.done ? "#d4a94a" : s.active ? "rgba(212,169,74,0.15)" : "rgba(212,169,74,0.05)",
+                  border: s.done ? "none" : s.active ? "1px solid #d4a94a" : "1px solid rgba(212,169,74,0.1)",
+                  color: s.done ? "#10100e" : s.active ? "#d4a94a" : "rgba(160,155,135,0.3)",
+                }}>
+                  {s.done ? <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>check</span> : s.step}
+                </div>
+                <span style={{ fontSize: "11px", fontWeight: 600, color: s.active ? "#f0ede6" : "rgba(160,155,135,0.35)" }}>{s.label}</span>
+              </div>
+              {i < 2 && <div style={{ flex: 1, height: "1px", background: s.done ? "#d4a94a" : "rgba(212,169,74,0.1)", margin: "0 12px" }} />}
+            </div>
+          ))}
         </div>
 
         {items.length === 0 ? (
-          <div className="bg-white/2 border border-white/5 rounded-3xl py-32 flex flex-col items-center justify-center space-y-10 animate-fade-in">
-             <p className="text-zinc-700 font-serif italic text-2xl tracking-widest">Your vessel is empty.</p>
-             <Link
-               href="/products"
-               className="inline-flex items-center justify-center px-12 py-5 rounded-2xl bg-primary text-background-dark text-[10px] font-black uppercase tracking-widest shadow-2xl hover:bg-white transition-all duration-500"
-             >
-               Explore Sacred Realms
-             </Link>
+          <div style={{ minHeight: "300px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px", background: "#161612", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "16px", textAlign: "center", padding: "40px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "64px", color: "rgba(212,169,74,0.12)" }}>shopping_bag</span>
+            <p style={{ fontFamily: "var(--font-serif)", fontSize: "20px", color: "#f0ede6", fontStyle: "italic" }}>Your cart is empty.</p>
+            <Link href="/products" style={{ padding: "11px 24px", background: "#d4a94a", color: "#10100e", borderRadius: "9px", fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", textDecoration: "none" }}>Browse Collections</Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-20">
-            <div className="lg:col-span-2 space-y-16">
-               <div className="space-y-10">
-                  <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600 border-b border-white/5 pb-6">Vessel Manifest</h2>
-                  <div className="space-y-8">
-                    {items.map((item: any) => {
-                      const priceNumber = Number(item.product.price);
-                      const lineTotal = priceNumber * item.quantity;
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "32px", alignItems: "start" }}>
 
-                      return (
-                        <div
-                          key={item.id}
-                          className="flex justify-between items-center group animate-fade-in"
-                        >
-                          <div className="space-y-2">
-                            <h3 className="font-serif text-2xl text-white group-hover:text-primary transition-colors duration-500">{item.product.name}</h3>
-                            <div className="flex items-center gap-3">
-                               <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Ritual Quantity</span>
-                               <span className="text-[11px] text-white font-bold">{item.quantity}</span>
-                               <div className="h-px w-4 bg-white/5" />
-                               <span className="text-[11px] text-zinc-400 font-serif italic">${priceNumber.toFixed(2)}</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                             <p className="text-2xl font-serif font-black text-white tracking-widest">
-                               ${lineTotal.toFixed(2)}
-                             </p>
-                          </div>
-                        </div>
-                      );
-                    })}
+            {/* ── LEFT: Shipping Form ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+
+              {/* Shipping Info */}
+              <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "14px", padding: "24px" }}>
+                <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 600, color: "#f0ede6", marginBottom: "20px" }}>
+                  Shipping <em style={{ color: "#d4a94a" }}>Information</em>
+                </h2>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                  {[
+                    { label: "First Name", name: "firstName", type: "text", placeholder: "Priya", full: false },
+                    { label: "Last Name", name: "lastName", type: "text", placeholder: "Sharma", full: false },
+                    { label: "Email Address", name: "email", type: "email", placeholder: "priya@gmail.com", full: true },
+                    { label: "Phone Number", name: "phone", type: "tel", placeholder: "+91 98765 43210", full: true },
+                    { label: "Address Line 1", name: "address1", type: "text", placeholder: "House / Flat No.", full: true },
+                    { label: "City", name: "city", type: "text", placeholder: "Mumbai", full: false },
+                    { label: "Pincode", name: "pincode", type: "text", placeholder: "400001", full: false },
+                  ].map(field => (
+                    <div key={field.name} style={{ gridColumn: field.full ? "1 / -1" : "auto", display: "flex", flexDirection: "column", gap: "5px" }}>
+                      <label style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(160,155,135,0.45)" }}>{field.label}</label>
+                      <input
+                        type={field.type}
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        style={{
+                          background: "rgba(212,169,74,0.03)", border: "1px solid rgba(212,169,74,0.1)",
+                          borderRadius: "8px", padding: "11px 13px",
+                          fontSize: "13px", color: "#f0ede6", outline: "none",
+                          fontFamily: "var(--font-sans), 'DM Sans', sans-serif",
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "14px", padding: "24px" }}>
+                <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 600, color: "#f0ede6", marginBottom: "16px" }}>
+                  Payment <em style={{ color: "#d4a94a" }}>Method</em>
+                </h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {[
+                    { id: "stripe", icon: "credit_card", label: "Credit / Debit Card", sub: "Visa, Mastercard, Amex" },
+                    { id: "upi", icon: "smartphone", label: "UPI Payment", sub: "GPay, PhonePe, BHIM" },
+                    { id: "cod", icon: "local_shipping", label: "Cash on Delivery", sub: "Pay when delivered" },
+                  ].map((method, i) => (
+                    <label key={method.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px", borderRadius: "10px", border: `1px solid ${i === 0 ? "#d4a94a" : "rgba(212,169,74,0.1)"}`, background: i === 0 ? "rgba(212,169,74,0.05)" : "transparent", cursor: "pointer" }}>
+                      <input type="radio" name="payment" defaultChecked={i === 0} style={{ accentColor: "#d4a94a" }} />
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>{method.icon}</span>
+                      <div>
+                        <p style={{ fontSize: "13px", fontWeight: 600, color: "#f0ede6", margin: 0 }}>{method.label}</p>
+                        <p style={{ fontSize: "10px", color: "rgba(160,155,135,0.45)", margin: 0 }}>{method.sub}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Trust badges */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+                {[
+                  { icon: "lock", label: "Secure Payment", sub: "256-bit SSL" },
+                  { icon: "verified_user", label: "Buyer Protection", sub: "30-day guarantee" },
+                  { icon: "eco", label: "Ethically Sourced", sub: "Sacred origins" },
+                ].map(t => (
+                  <div key={t.label} style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "#d4a94a", display: "block", marginBottom: "6px" }}>{t.icon}</span>
+                    <p style={{ fontSize: "11px", fontWeight: 700, color: "#f0ede6", marginBottom: "2px" }}>{t.label}</p>
+                    <p style={{ fontSize: "10px", color: "rgba(160,155,135,0.45)" }}>{t.sub}</p>
                   </div>
-               </div>
-
-               {/* Trust Pillars */}
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pt-16 border-t border-white/5">
-                  <TrustPillar 
-                    icon={<Lock size={20} className="text-primary/60" />} 
-                    title="Secured Link" 
-                    desc="Encrypted energy transit via sacred Stripe gateway."
-                  />
-                  <TrustPillar 
-                    icon={<ShieldCheck size={20} className="text-primary/60" />} 
-                    title="Ethical Dharma" 
-                    desc="Pure origins and high-vibration fair trade."
-                  />
-                  <TrustPillar 
-                    icon={<Sparkles size={20} className="text-primary/60" />} 
-                    title="Divine Aura" 
-                    desc="Artifacts are cleansed before departure."
-                  />
-               </div>
+                ))}
+              </div>
             </div>
 
-            <aside className="space-y-10">
-               <div className="bg-white/2 border border-white/5 rounded-3xl p-10 space-y-10 sticky top-32 shadow-2xl overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000" />
-                  
-                  <div className="space-y-8 relative z-10">
-                     <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600 pb-5 border-b border-white/5">
-                       Offering Summary
-                     </h2>
-                     <div className="space-y-5">
-                        <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest">
-                          <span className="text-zinc-500">Ancient Value</span>
-                          <span className="text-white">
-                            ${subtotal.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                          <span>Sacred Transit</span>
-                          <span className="italic">Calculated at Ritual</span>
-                        </div>
-                     </div>
-                  </div>
+            {/* ── RIGHT: Order Summary ── */}
+            <aside style={{ position: "sticky", top: "90px" }}>
+              <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "18px", padding: "24px" }}>
+                <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 600, color: "#f0ede6", marginBottom: "20px" }}>Order Summary</h2>
 
-                  <div className="pt-10 border-t border-white/5 flex items-center justify-between relative z-10">
-                    <div className="space-y-2">
-                       <span className="text-[9px] font-black uppercase tracking-[0.5em] text-primary">Final Harvest</span>
-                       <div className="text-5xl font-serif font-black text-white tracking-tight leading-none italic">
-                         ${subtotal.toFixed(2)}
-                       </div>
+                {/* Items */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px", paddingBottom: "20px", borderBottom: "1px solid rgba(212,169,74,0.08)" }}>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {items.map((item: any) => (
+                    <div key={item.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                      <span style={{ color: "rgba(200,195,178,0.65)" }}>{item.product.name} × {item.quantity}</span>
+                      <span style={{ fontWeight: 600, color: "#f0ede6" }}>₹{(Number(item.product.price) * item.quantity).toLocaleString("en-IN")}</span>
                     </div>
-                  </div>
+                  ))}
+                </div>
 
-                  <div className="space-y-6 relative z-10">
-                     <form action="/api/checkout" method="POST">
-                        <button
-                          type="submit"
-                          className="w-full bg-primary text-background-dark py-6 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all duration-500 shadow-2xl flex items-center justify-center gap-3 active:scale-95"
-                        >
-                          Forge Payment
-                          <MoveRight size={18} />
-                        </button>
-                     </form>
-                     <p className="text-[9px] text-zinc-600 text-center font-bold uppercase tracking-[0.3em]">Identity Verification via Stripe</p>
-                  </div>
+                {/* Totals */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+                  {[
+                    { label: "Subtotal", val: `₹${subtotal.toFixed(0)}` },
+                    { label: "Shipping", val: shipping === 0 ? "Free" : `₹${shipping}`, accent: shipping === 0 },
+                    { label: "GST (5%)", val: `₹${tax.toFixed(0)}` },
+                  ].map(row => (
+                    <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                      <span style={{ color: "rgba(160,155,135,0.45)" }}>{row.label}</span>
+                      <span style={{ fontWeight: 600, color: row.accent ? "#25e2f4" : "#f0ede6" }}>{row.val}</span>
+                    </div>
+                  ))}
+                </div>
 
-                  <div className="p-6 rounded-2xl bg-black/40 border border-white/5 text-center relative z-10 group/inner hover:border-primary/20 transition-all">
-                     <p className="text-[10px] text-zinc-500 italic leading-relaxed font-serif">
-                        &ldquo;Your contribution sustains the guardians of ancient high-vibration crafts.&rdquo;
-                     </p>
-                  </div>
-               </div>
+                <div style={{ height: "1px", background: "rgba(212,169,74,0.1)", margin: "0 0 16px" }} />
+
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "24px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#f0ede6" }}>Total</span>
+                  <span style={{ fontFamily: "var(--font-serif)", fontSize: "26px", fontWeight: 700, color: "#d4a94a" }}>₹{total.toFixed(0)}</span>
+                </div>
+
+                {/* CTA */}
+                <form action="/api/checkout" method="POST">
+                  <button type="submit" style={{
+                    width: "100%", padding: "14px",
+                    background: "#d4a94a", color: "#10100e",
+                    fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+                    border: "none", borderRadius: "10px", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                    boxSizing: "border-box",
+                  }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>lock</span>
+                    Place Order — ₹{total.toFixed(0)}
+                  </button>
+                </form>
+
+                <p style={{ textAlign: "center", fontSize: "11px", color: "rgba(160,155,135,0.45)", marginTop: "10px" }}>
+                  🔒 Secured by Stripe
+                </p>
+
+                <div style={{ marginTop: "16px", padding: "14px", borderRadius: "10px", background: "rgba(212,169,74,0.03)", border: "1px solid rgba(212,169,74,0.08)", fontSize: "12px", color: "rgba(200,195,178,0.65)", fontStyle: "italic", textAlign: "center", lineHeight: 1.5 }}>
+                  &ldquo;Your contribution sustains the keepers of ancient sacred crafts.&rdquo;
+                </div>
+              </div>
             </aside>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function TrustPillar({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
-  return (
-    <div className="space-y-5 group hover:bg-white/1 p-6 rounded-2xl transition-all border border-transparent hover:border-white/5">
-       <div className="transition-transform duration-500 group-hover:scale-110">{icon}</div>
-       <div className="space-y-2">
-         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">{title}</h4>
-         <p className="text-xs text-zinc-600 leading-relaxed font-light">{desc}</p>
-       </div>
     </div>
   );
 }

@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getOrdersForUser } from "@/modules/orders/service";
-import { History, Sparkles, ChevronRight, User, MoveRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-const statusMap: Record<string, string> = {
-  PENDING: "Transcending",
-  PAID: "Manifesting",
-  SHIPPED: "Vibrating",
-  DELIVERED: "Manifested",
-  CANCELLED: "Returned to Source",
+const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  PENDING:   { label: "Pending",    color: "#ff9933",  bg: "rgba(255,153,51,0.08)",   border: "rgba(255,153,51,0.2)" },
+  PAID:      { label: "Paid",       color: "#d4a94a",  bg: "rgba(212,169,74,0.08)",   border: "rgba(212,169,74,0.2)" },
+  SHIPPED:   { label: "Shipped",    color: "#bb86fc",  bg: "rgba(187,134,252,0.08)",  border: "rgba(187,134,252,0.2)" },
+  DELIVERED: { label: "Delivered",  color: "#25e2f4",  bg: "rgba(37,226,244,0.08)",   border: "rgba(37,226,244,0.2)" },
+  CANCELLED: { label: "Cancelled",  color: "#f87171",  bg: "rgba(248,113,113,0.08)",  border: "rgba(248,113,113,0.2)" },
 };
 
 export default async function OrdersPage() {
@@ -18,23 +17,16 @@ export default async function OrdersPage() {
 
   if (!session?.user?.id) {
     return (
-      <div className="bg-background-dark min-h-screen flex items-center justify-center text-white p-6">
-        <div className="max-w-md w-full bg-white/5 p-12 rounded-[32px] border border-white/5 text-center space-y-8 animate-fade-in shadow-2xl">
-          <div className="h-20 w-20 bg-primary/10 rounded-full mx-auto flex items-center justify-center border border-primary/20">
-             <User className="text-primary" size={32} />
+      <div style={{ background: "#10100e", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+        <div style={{ maxWidth: "400px", width: "100%", textAlign: "center", background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "24px", padding: "56px 40px" }}>
+          <div style={{ width: "72px", height: "72px", borderRadius: "20px", background: "rgba(212,169,74,0.08)", border: "1px solid rgba(212,169,74,0.14)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "32px", color: "#d4a94a" }}>receipt_long</span>
           </div>
-          <div className="space-y-4">
-            <h1 className="text-3xl font-serif font-black uppercase tracking-widest leading-tight">Identity Hidden</h1>
-            <p className="text-zinc-500 text-sm leading-relaxed font-light tracking-wide max-w-xs mx-auto">
-              We cannot reveal your manifestation history until you enter the sanctuary.
-            </p>
-          </div>
-          <Link
-            href="/login"
-            className="group flex items-center justify-center gap-3 w-full py-5 rounded-xl bg-primary text-background-dark text-xs font-black uppercase tracking-[0.2em] hover:bg-white transition-all duration-700 shadow-xl"
-          >
-            Sign In to Verify
-            <MoveRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "26px", fontWeight: 600, color: "#f0ede6", marginBottom: "10px" }}>Sign In Required</h1>
+          <p style={{ fontSize: "13px", color: "rgba(160,155,135,0.45)", lineHeight: 1.6, marginBottom: "28px" }}>Please sign in to view your order history.</p>
+          <Link href="/login" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: "#d4a94a", color: "#10100e", borderRadius: "10px", padding: "13px 28px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>login</span>
+            Sign In
           </Link>
         </div>
       </div>
@@ -44,91 +36,79 @@ export default async function OrdersPage() {
   const orders = await getOrdersForUser(session.user.id);
 
   return (
-    <div className="bg-background-dark min-h-screen pb-40 text-white">
-      {/* Background Aesthetics */}
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(236,149,19,0.05),transparent_70%)] pointer-events-none -z-10" />
+    <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px" }}>
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "48px clamp(16px,4vw,48px) 80px" }}>
 
-      <div className="h-32" />
-      <div className="max-w-5xl mx-auto px-6 space-y-20">
-        <div className="space-y-10">
-           <div className="h-px w-16 bg-primary" />
-           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-              <div className="space-y-4">
-                 <h1 className="text-5xl md:text-7xl font-serif font-black tracking-tighter leading-tight drop-shadow-2xl">
-                   Spiritual <span className="text-primary italic">History</span>
-                 </h1>
-                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] ml-1">Reviewing Your Manifested Journey</p>
-              </div>
-              <div className="flex items-center gap-6 px-8 py-3 bg-white/2 border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                 <Sparkles size={16} className="text-primary/40" />
-                 <span>Artifacts harmonized: <span className="text-white font-mono ml-2 tracking-normal">{orders.length}</span></span>
-              </div>
-           </div>
+        {/* Header */}
+        <div style={{ marginBottom: "40px" }}>
+          <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#d4a94a", marginBottom: "8px" }}>Account</p>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+            <h1 style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "clamp(28px,4vw,40px)", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
+              My <em style={{ color: "#d4a94a" }}>Orders</em>
+            </h1>
+            <span style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)", padding: "6px 14px", background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "8px" }}>
+              {orders.length} order{orders.length !== 1 ? "s" : ""}
+            </span>
+          </div>
         </div>
 
+        {/* Empty State */}
         {orders.length === 0 ? (
-          <div className="bg-white/2 border border-white/5 rounded-[40px] py-40 flex flex-col items-center justify-center space-y-12 animate-fade-in text-center px-10 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
-            <div className="h-28 w-28 bg-background-dark/50 rounded-full flex items-center justify-center border-2 border-white/5 mb-4 group overflow-hidden relative text-zinc-800">
-               <History size={48} className="relative z-10" strokeWidth={0.5} />
-               <div className="absolute inset-0 bg-primary/5 scale-0 group-hover:scale-100 transition-transform duration-1000" />
+          <div style={{ minHeight: "360px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", background: "#161612", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "16px", textAlign: "center", padding: "56px 40px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "72px", color: "rgba(212,169,74,0.12)" }}>inventory_2</span>
+            <div>
+              <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "22px", fontWeight: 600, color: "#f0ede6", fontStyle: "italic", marginBottom: "8px" }}>No orders yet</h2>
+              <p style={{ fontSize: "13px", color: "rgba(160,155,135,0.45)" }}>Begin your sacred journey and your orders will appear here.</p>
             </div>
-            <div className="space-y-6">
-               <p className="text-zinc-400 font-serif italic text-3xl tracking-widest leading-relaxed">Your journey is yet to be recorded.</p>
-               <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.5em]">No artifacts have been claimed</p>
-            </div>
-            <Link
-              href="/products"
-              className="px-12 py-5 rounded-xl bg-primary text-background-dark text-xs font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-white transition-all duration-700 transform hover:scale-105"
-            >
-              Consult the Collection
+            <Link href="/products" style={{ padding: "12px 28px", background: "#d4a94a", color: "#10100e", borderRadius: "10px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none" }}>
+              Browse Collections
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-10 animate-fade-in">
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {orders.map((order) => {
-              const totalNumber = Number(order.total);
-              const statusLabel = statusMap[order.status] || order.status;
-
+              const st = statusConfig[order.status] || { label: order.status, color: "#d4a94a", bg: "rgba(212,169,74,0.08)", border: "rgba(212,169,74,0.2)" };
               return (
-                <Link
-                  key={order.id}
-                  href={`/orders/${order.id}`}
-                  className="group block bg-white/2 border border-white/5 rounded-[32px] p-10 hover:border-primary/30 transition-all duration-1000 hover:shadow-primary/5 overflow-hidden relative shadow-xl"
-                >
-                  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-linear-to-r from-transparent via-primary/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-1000" />
-                  
-                  <div className="flex flex-col md:flex-row justify-between gap-10 md:items-center relative z-10">
-                    <div className="space-y-6">
-                       <div className="flex items-center gap-6">
-                          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Manifestation ID</span>
-                          <span className="text-[10px] font-mono text-primary font-black bg-primary/5 px-3 py-1 rounded-lg border border-primary/20 tracking-normal shadow-inner">
-                            #{order.id.slice(0, 12).toUpperCase()}
-                          </span>
-                       </div>
-                       <h3 className="text-3xl font-serif font-black italic text-white group-hover:text-primary transition-all duration-700">
-                          {order.items.length} Artifact{order.items.length === 1 ? "" : "s"} Synchronized
-                       </h3>
-                       <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">
-                          <span className="flex items-center gap-2 italic">Timeline: <span className="text-zinc-400 not-italic ml-1">{order.createdAt.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span></span>
-                          <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
-                          <span className="flex items-center gap-2 italic">Energy Total: <span className="text-white font-serif font-bold text-lg not-italic ml-1">${totalNumber.toFixed(2)}</span></span>
-                       </div>
+                <Link key={order.id} href={`/orders/${order.id}`} style={{ textDecoration: "none" }}>
+                  <div style={{
+                    background: "#161612", border: "1px solid rgba(212,169,74,0.08)",
+                    borderRadius: "14px", padding: "20px 24px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    gap: "16px", flexWrap: "wrap",
+                    transition: "border-color 0.18s, transform 0.18s",
+                    cursor: "pointer",
+                  }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(212,169,74,0.2)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(212,169,74,0.08)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}
+                  >
+                    {/* Left */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                      <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(212,169,74,0.08)", border: "1px solid rgba(212,169,74,0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "#d4a94a" }}>shopping_bag</span>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: "11px", color: "#d4a94a", fontFamily: "monospace", marginBottom: "4px" }}>#AK-{order.id.slice(-8).toUpperCase()}</p>
+                        <p style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: 600, color: "#f0ede6", margin: "0 0 4px" }}>
+                          {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                        </p>
+                        <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)" }}>
+                          {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-16">
-                       <div className="text-right space-y-2">
-                          <p className="text-[9px] text-zinc-600 uppercase tracking-[0.5em] font-black">Spiritual State</p>
-                          <p className={`text-[10px] font-black uppercase tracking-[0.3em] px-6 py-2.5 rounded-xl border transition-all ${
-                            order.status === 'DELIVERED' ? 'text-primary border-primary/20 bg-primary/5 shadow-lg shadow-primary/5' : 'text-zinc-400 border-white/5 bg-white/2'
-                          }`}>
-                            {statusLabel}
-                          </p>
-                       </div>
-                       <div className="h-16 w-16 bg-background-dark/50 rounded-2xl flex items-center justify-center border border-white/5 text-zinc-600 group-hover:text-primary group-hover:border-primary/20 transition-all duration-1000 group-hover:translate-x-2 relative overflow-hidden">
-                          <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <ChevronRight size={20} className="relative z-10" />
-                       </div>
+                    {/* Right */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", marginBottom: "4px" }}>Total</p>
+                        <p style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 700, color: "#f0ede6" }}>₹{Number(order.total).toLocaleString("en-IN")}</p>
+                      </div>
+                      <span style={{
+                        padding: "5px 12px", borderRadius: "99px", fontSize: "10px", fontWeight: 700,
+                        color: st.color, background: st.bg, border: `1px solid ${st.border}`,
+                        whiteSpace: "nowrap",
+                      }}>{st.label}</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "rgba(160,155,135,0.3)" }}>chevron_right</span>
                     </div>
                   </div>
                 </Link>

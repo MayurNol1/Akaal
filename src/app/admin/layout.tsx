@@ -3,32 +3,25 @@
 import { useSession, signOut } from "next-auth/react";
 import { redirect, usePathname } from "next/navigation";
 import Link from "next/link";
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingBag, 
-  Users, 
-  Settings, 
-  LogOut,
-  Sparkles,
-  Search,
-  Menu,
-  ChevronRight
-} from "lucide-react";
 
 import { NotificationBell } from "./notification-bell";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const navItems = [
+  { href: "/admin", icon: "grid_view", label: "Overview", exact: true },
+  { href: "/admin/products", icon: "inventory_2", label: "Products" },
+  { href: "/admin/orders", icon: "receipt_long", label: "Orders" },
+  { href: "/admin/users", icon: "group", label: "Users" },
+  { href: "/admin/settings", icon: "settings", label: "Settings" },
+];
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const [globalSearch, setGlobalSearch] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleGlobalSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,8 +32,15 @@ export default function AdminLayout({
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <Sparkles className="text-primary animate-pulse" size={40} />
+      <div style={{ minHeight: "100vh", background: "#10100e", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+          <svg style={{ animation: "spin 1s linear infinite" }} width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="20" r="16" stroke="rgba(212,169,74,0.15)" strokeWidth="3" />
+            <path d="M20 4 A16 16 0 0 1 36 20" stroke="#d4a94a" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+          <span style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Loading…</span>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -49,99 +49,162 @@ export default function AdminLayout({
     redirect("/");
   }
 
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex overflow-hidden">
-      {/* Sidebar from Stitch UI */}
-      <aside className="w-80 border-r border-white/5 flex flex-col p-10 space-y-12 max-lg:hidden bg-[#0f0e0b] relative z-20">
-        <Link href="/admin" className="flex items-center gap-4 group px-2">
-          <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/40 transition-all duration-500">
-             <Sparkles className="text-primary" size={20} />
-          </div>
-          <div>
-            <h1 className="font-serif text-2xl font-black tracking-tighter text-white uppercase group-hover:text-primary transition-colors">AKAAL</h1>
-            <p className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/60 -mt-1">Control Hub</p>
-          </div>
-        </Link>
+  const isActive = (item: typeof navItems[0]) =>
+    item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
-        <nav className="flex-1 space-y-3">
-          <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.5em] mb-6 ml-2">Administrative Path</p>
-          <AdminNavItem href="/admin" icon={<LayoutDashboard size={20} />} label="Zen Overview" active={pathname === "/admin"} />
-          <AdminNavItem href="/admin/products" icon={<Package size={20} />} label="Artifact Vault" active={pathname.startsWith("/admin/products")} />
-          <AdminNavItem href="/admin/orders" icon={<ShoppingBag size={20} />} label="Manifest Logs" active={pathname.startsWith("/admin/orders")} />
-          <AdminNavItem href="/admin/users" icon={<Users size={20} />} label="Seeker Registry" active={pathname === "/admin/users"} />
-          <AdminNavItem href="/admin/settings" icon={<Settings size={20} />} label="Core Settings" active={pathname === "/admin/settings"} />
+  return (
+    <div style={{ minHeight: "100vh", background: "#10100e", color: "#f0ede6", display: "flex", overflow: "hidden" }}>
+      
+      {/* ── SIDEBAR ── */}
+      <aside style={{
+        width: sidebarCollapsed ? "64px" : "240px",
+        flexShrink: 0, background: "#161612",
+        borderRight: "1px solid rgba(212,169,74,0.1)",
+        display: "flex", flexDirection: "column",
+        transition: "width 0.3s cubic-bezier(.4,0,.2,1)",
+        overflow: "hidden",
+        position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 40,
+      }}>
+        {/* Logo */}
+        <div style={{
+          height: "64px", display: "flex", alignItems: "center",
+          padding: sidebarCollapsed ? "0 16px" : "0 20px",
+          borderBottom: "1px solid rgba(212,169,74,0.1)",
+          gap: "12px", flexShrink: 0,
+        }}>
+          <div style={{
+            width: "32px", height: "32px", borderRadius: "8px",
+            background: "rgba(212,169,74,0.12)", border: "1px solid rgba(212,169,74,0.14)",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 48 48" fill="#d4a94a">
+              <path d="M8.578 8.578C5.528 11.628 3.451 15.515 2.61 19.745 1.768 23.976 2.2 28.361 3.85 32.346 5.501 36.331 8.297 39.738 11.883 42.134 15.47 44.53 19.686 45.81 24 45.81c4.313 0 8.53-1.28 12.117-3.676 3.586-2.396 6.382-5.803 8.033-9.788 1.65-3.985 2.082-8.37 1.241-12.601-.842-4.23-2.919-8.117-5.969-11.167L24 24 8.578 8.578Z" />
+            </svg>
+          </div>
+          {!sidebarCollapsed && (
+            <div>
+              <span style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 700, letterSpacing: "0.1em", color: "#d4a94a" }}>AKAAL</span>
+              <span style={{ fontSize: "9px", display: "block", color: "rgba(160,155,135,0.45)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Admin Panel</span>
+            </div>
+          )}
+        </div>
+
+        {/* Nav links */}
+        <nav style={{ flex: 1, padding: "16px 10px", display: "flex", flexDirection: "column", gap: "4px", overflowY: "auto" }}>
+          {!sidebarCollapsed && (
+            <p style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(160,155,135,0.3)", padding: "0 6px 8px", margin: 0 }}>
+              Navigation
+            </p>
+          )}
+          {navItems.map(item => {
+            const active = isActive(item);
+            return (
+              <Link key={item.href} href={item.href} style={{
+                display: "flex", alignItems: "center", gap: "12px",
+                padding: sidebarCollapsed ? "10px" : "10px 12px",
+                borderRadius: "10px", textDecoration: "none",
+                justifyContent: sidebarCollapsed ? "center" : "flex-start",
+                background: active ? "rgba(212,169,74,0.12)" : "transparent",
+                border: active ? "1px solid rgba(212,169,74,0.2)" : "1px solid transparent",
+                color: active ? "#d4a94a" : "rgba(200,195,178,0.65)",
+                transition: "all 0.18s",
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "18px", flexShrink: 0 }}>{item.icon}</span>
+                {!sidebarCollapsed && (
+                  <span style={{ fontSize: "12px", fontWeight: active ? 700 : 500, whiteSpace: "nowrap" }}>{item.label}</span>
+                )}
+                {!sidebarCollapsed && active && (
+                  <span style={{ marginLeft: "auto", width: "6px", height: "6px", borderRadius: "50%", background: "#d4a94a" }} />
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="pt-8 border-t border-white/5 space-y-6">
-           <div className="flex items-center gap-4 px-4">
-              <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 p-1">
-                 <img src={session?.user?.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop"} alt="Admin" className="size-full object-cover rounded-lg grayscale" />
+        {/* User */}
+        <div style={{ padding: "12px 10px", borderTop: "1px solid rgba(212,169,74,0.1)" }}>
+          {!sidebarCollapsed && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 6px", marginBottom: "4px" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(212,169,74,0.3)", flexShrink: 0 }}>
+                <img src={session?.user?.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop"} alt="Admin" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
               <div>
-                 <p className="text-[11px] font-black text-white italic">{session?.user?.name}</p>
-                 <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Grand Overseer</p>
+                <p style={{ fontSize: "12px", fontWeight: 700, color: "#f0ede6", margin: 0 }}>{session?.user?.name}</p>
+                <p style={{ fontSize: "9px", color: "rgba(160,155,135,0.45)", margin: 0, textTransform: "uppercase", letterSpacing: "0.08em" }}>Administrator</p>
               </div>
-           </div>
-           <button 
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex items-center gap-4 w-full px-4 py-4 rounded-2xl text-zinc-600 hover:text-red-400 hover:bg-red-400/5 transition-all text-[10px] font-black uppercase tracking-widest"
-           >
-              <LogOut size={18} />
-              Sever Connection
-           </button>
+            </div>
+          )}
+          <button onClick={() => signOut({ callbackUrl: "/" })} style={{
+            width: "100%", display: "flex", alignItems: "center", gap: "10px",
+            justifyContent: sidebarCollapsed ? "center" : "flex-start",
+            padding: sidebarCollapsed ? "10px" : "9px 12px",
+            borderRadius: "8px", background: "transparent",
+            border: "none", cursor: "pointer",
+            color: "rgba(160,155,135,0.45)", fontSize: "12px", fontWeight: 500,
+            transition: "color 0.18s, background 0.18s",
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#f87171"; (e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.06)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(160,155,135,0.45)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>logout</span>
+            {!sidebarCollapsed && "Sign Out"}
+          </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 bg-transparent overflow-y-auto">
-        <header className="h-24 border-b border-white/5 flex items-center justify-between px-12 bg-[#0a0a0a]/80 backdrop-blur-md sticky top-0 z-30">
-          <div className="flex items-center gap-6 flex-1 max-w-xl">
-             <form onSubmit={handleGlobalSearch} className="relative group w-full">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-hover:text-primary transition-colors" size={16} />
-                <input 
-                  type="text" 
-                  value={globalSearch}
-                  onChange={(e) => setGlobalSearch(e.target.value)}
-                  placeholder="Universal Search..." 
-                  className="w-full bg-white/2 border border-white/5 rounded-2xl py-3 pl-12 pr-6 focus:outline-none focus:border-primary/20 transition-all text-[11px] font-medium placeholder:text-zinc-800 text-white"
-                />
-             </form>
+      {/* ── MAIN ── */}
+      <main style={{
+        flex: 1, display: "flex", flexDirection: "column",
+        marginLeft: sidebarCollapsed ? "64px" : "240px",
+        transition: "margin-left 0.3s cubic-bezier(.4,0,.2,1)",
+        minHeight: "100vh", overflowY: "auto",
+      }}>
+        {/* Topbar */}
+        <header style={{
+          height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 clamp(16px,3vw,40px)",
+          background: "rgba(16,16,14,0.9)", backdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(212,169,74,0.08)",
+          position: "sticky", top: 0, zIndex: 30,
+          gap: "16px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {/* Collapse button */}
+            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} style={{
+              width: "36px", height: "36px", borderRadius: "8px",
+              background: "transparent", border: "1px solid rgba(212,169,74,0.1)",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              color: "rgba(160,155,135,0.45)", transition: "all 0.18s",
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>menu</span>
+            </button>
+
+            {/* Search */}
+            <form onSubmit={handleGlobalSearch} style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(212,169,74,0.04)", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "8px", padding: "0 12px", height: "36px" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "15px", color: "rgba(160,155,135,0.45)" }}>search</span>
+              <input
+                type="text"
+                value={globalSearch}
+                onChange={e => setGlobalSearch(e.target.value)}
+                placeholder="Search products, orders…"
+                style={{ background: "none", border: "none", outline: "none", fontSize: "12px", color: "#f0ede6", width: "200px", fontFamily: "var(--font-sans)" }}
+              />
+            </form>
           </div>
 
-          <div className="flex items-center gap-6">
-             <NotificationBell />
-             <button className="lg:hidden h-12 w-12 rounded-2xl bg-white/2 border border-white/5 flex items-center justify-center text-zinc-600">
-                <Menu size={20} />
-             </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <NotificationBell />
+            <Link href="/" style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", textDecoration: "none", padding: "6px 12px", borderRadius: "8px", border: "1px solid rgba(212,169,74,0.08)", transition: "all 0.18s" }}>
+              ← Back to Site
+            </Link>
           </div>
         </header>
 
-        <div className="p-12 relative">
-           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/2 blur-[150px] rounded-full pointer-events-none -mr-40 -mt-20" />
-           {children}
+        {/* Content */}
+        <div style={{ flex: 1, padding: "clamp(20px,3vw,40px)", position: "relative" }}>
+          {children}
         </div>
       </main>
     </div>
-  );
-}
-
-function AdminNavItem({ href, icon, label, active }: { href: string, icon: React.ReactNode, label: string, active: boolean }) {
-  return (
-    <Link 
-      href={href}
-      className={`flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-500 group ${
-        active 
-          ? "bg-primary text-background-dark shadow-2xl shadow-primary/20 translate-x-1" 
-          : "text-zinc-600 hover:text-white hover:bg-white/5"
-      }`}
-    >
-      <div className="flex items-center gap-4">
-        <span className={`${active ? "text-background-dark scale-110" : "group-hover:text-primary transition-colors"} duration-500`}>
-          {icon}
-        </span>
-        <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
-      </div>
-      {active && <ChevronRight size={14} className="text-background-dark" />}
-    </Link>
   );
 }

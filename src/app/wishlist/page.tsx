@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart, Loader2 } from "lucide-react";
 import { Product } from "@prisma/client";
 import { ProductCardStitch } from "@/components/products/product-card";
 
@@ -14,32 +13,20 @@ export default function WishlistPage() {
     const loadWishlist = async () => {
       setLoading(true);
       const likedIds: string[] = [];
-      
-      // Collect all liked IDs from localStorage
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key?.startsWith("liked_")) {
-          const id = key.replace("liked_", "");
-          likedIds.push(id);
-        }
+        if (key?.startsWith("liked_")) likedIds.push(key.replace("liked_", ""));
       }
-
       if (likedIds.length === 0) {
         setProducts([]);
         setLoading(false);
         return;
       }
-
       try {
         const res = await fetch(`/api/products?ids=${likedIds.join(",")}`);
         const data = await res.json();
-        
-        // Handle both cases: raw array or wrapped { success, data }
-        if (Array.isArray(data)) {
-          setProducts(data);
-        } else if (data && data.success && Array.isArray(data.data)) {
-          setProducts(data.data);
-        }
+        if (Array.isArray(data)) setProducts(data);
+        else if (data?.success && Array.isArray(data.data)) setProducts(data.data);
       } catch (err) {
         console.error("Failed to fetch wishlist products:", err);
       } finally {
@@ -48,63 +35,60 @@ export default function WishlistPage() {
     };
 
     loadWishlist();
-
-    // Listen for custom event to refresh when items are unliked from within cards
     window.addEventListener("wishlist-updated", loadWishlist);
     return () => window.removeEventListener("wishlist-updated", loadWishlist);
   }, []);
 
   return (
-    <div className="bg-background-dark text-white min-h-screen">
-      <main className="max-w-7xl mx-auto pt-32 pb-20 px-6 space-y-12">
-        <header className="space-y-6 border-b border-primary/10 pb-10">
-          <div className="flex items-center gap-4">
-            <div className="h-px w-12 bg-primary/50" />
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-500">Divine Desires</p>
-          </div>
-          <h1 className="font-serif text-5xl md:text-6xl font-black bg-linear-to-r from-primary via-white to-white bg-clip-text text-transparent transform -translate-x-1">
-            Sacred <span className="italic text-white">Wishlist</span>
-          </h1>
-          <p className="text-zinc-500 max-w-2xl font-serif italic text-lg leading-relaxed">
-            Artifacts that have resonated with your spirit. Revisit the vibrations you&apos;ve felt before they transcend this realm.
-          </p>
-        </header>
+    <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px" }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "48px clamp(16px,4vw,48px) 80px" }}>
 
+        {/* Header */}
+        <div style={{ marginBottom: "40px", paddingBottom: "32px", borderBottom: "1px solid rgba(212,169,74,0.1)" }}>
+          <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#d4a94a", marginBottom: "8px" }}>My Account</p>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+            <h1 style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "clamp(28px,4vw,40px)", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
+              My <em style={{ color: "#d4a94a" }}>Wishlist</em>
+            </h1>
+            {!loading && (
+              <span style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)", padding: "6px 14px", background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "8px" }}>
+                {products.length} saved item{products.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+          <p style={{ fontSize: "14px", color: "rgba(200,195,178,0.65)", lineHeight: 1.6, marginTop: "10px", maxWidth: "480px" }}>
+            Artifacts that have resonated with your spirit. Revisit them before they&apos;re gone.
+          </p>
+        </div>
+
+        {/* Content */}
         {loading ? (
-          <div className="h-[40vh] flex flex-col items-center justify-center space-y-4">
-             <Loader2 className="text-primary animate-spin" size={40} />
-             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Summoning your collection...</p>
+          <div style={{ minHeight: "300px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "14px" }}>
+            <div style={{ width: "36px", height: "36px", borderRadius: "50%", border: "3px solid rgba(212,169,74,0.15)", borderTopColor: "#d4a94a", animation: "spin 0.8s linear infinite" }} />
+            <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", letterSpacing: "0.15em", textTransform: "uppercase" }}>Loading wishlist…</p>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         ) : products.length === 0 ? (
-          <div className="h-[50vh] flex flex-col items-center justify-center bg-white/2 border border-white/5 rounded-[40px] space-y-10 text-center px-6 transition-all hover:border-primary/10 group overflow-hidden relative">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(236,149,19,0.03),transparent_70%)]" />
-            
-            <div className="relative group/icon">
-               <div className="absolute inset-0 bg-primary/10 blur-3xl rounded-full scale-150 group-hover/icon:scale-200 transition-transform duration-1000" />
-               <Heart size={80} strokeWidth={1} className="relative z-10 text-zinc-900 group-hover/icon:text-primary/20 transition-colors duration-700" />
+          <div style={{ minHeight: "400px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", background: "#161612", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "16px", textAlign: "center", padding: "56px 40px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "72px", color: "rgba(212,169,74,0.12)" }}>favorite_border</span>
+            <div>
+              <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "24px", fontWeight: 600, color: "#f0ede6", fontStyle: "italic", marginBottom: "8px" }}>Your wishlist is empty</h2>
+              <p style={{ fontSize: "13px", color: "rgba(160,155,135,0.45)", maxWidth: "320px", margin: "0 auto" }}>
+                Browse our collections and tap the heart on any product to save it here.
+              </p>
             </div>
-            
-            <div className="space-y-4 relative z-10">
-               <h2 className="font-serif italic text-3xl tracking-widest text-white">Your spirit is currently unburdened.</h2>
-               <p className="text-[11px] text-zinc-600 font-bold uppercase tracking-[0.4em] max-w-md mx-auto leading-loose">No artifacts have yet captured your gaze. Explore the collections and listen for a resonance.</p>
-            </div>
-            
-            <Link 
-              href="/products" 
-              className="px-12 py-5 rounded-2xl bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-gold transition-all duration-700 active:scale-95 group relative overflow-hidden"
-            >
-               <span className="relative z-10">Listen to the Call</span>
-               <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-shimmer" />
+            <Link href="/products" style={{ padding: "12px 28px", background: "#d4a94a", color: "#10100e", borderRadius: "10px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none" }}>
+              Browse Collections
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
             {products.map((product) => (
               <ProductCardStitch key={product.id} product={product} />
             ))}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

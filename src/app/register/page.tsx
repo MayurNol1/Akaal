@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Mail, Lock, User, Loader2, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function RegisterPage() {
   const { status } = useSession();
@@ -15,186 +14,203 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/dashboard");
-    }
+    if (status === "authenticated") router.push("/dashboard");
   }, [status, router]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterInput>({
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterInput>({
     resolver: zodResolver(RegisterSchema),
   });
 
   const onSubmit = async (data: RegisterInput) => {
     setIsLoading(true);
     setError(null);
-
     try {
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
       const result = await response.json();
-
       if (!response.ok) {
-        setError(result.message || "Manifestation failed. Is this vessel already known?");
+        setError(result.message || "This email is already registered. Please sign in.");
       } else {
         setSuccess(true);
-        setTimeout(() => {
-          router.push("/login");
-        }, 2000);
+        setTimeout(() => router.push("/login"), 2000);
       }
     } catch {
-      setError("An unexpected disruption in the energy flow occurred.");
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%", background: "rgba(212,169,74,0.03)",
+    border: "1px solid rgba(212,169,74,0.1)", borderRadius: "9px",
+    padding: "11px 14px 11px 40px",
+    fontSize: "13px", color: "#f0ede6", outline: "none",
+    fontFamily: "var(--font-sans), 'DM Sans', sans-serif",
+    transition: "border-color 0.18s",
+    boxSizing: "border-box",
+  };
+  const labelStyle: React.CSSProperties = {
+    fontSize: "10px", fontWeight: 700, textTransform: "uppercase",
+    letterSpacing: "0.09em", color: "rgba(160,155,135,0.45)",
+  };
+  const iconStyle: React.CSSProperties = {
+    position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)",
+    fontSize: "15px", color: "rgba(160,155,135,0.45)", pointerEvents: "none",
+  };
+
   return (
-    <div className="relative isolate min-h-screen bg-black flex items-center justify-center p-6 overflow-hidden text-white">
-      {/* Background Aesthetics */}
-      <div className="absolute top-[-15%] right-[-10%] w-[60%] h-[60%] bg-blue-950/10 blur-[150px] rounded-full animate-breathe" />
-      <div className="absolute bottom-[-15%] left-[-10%] w-[60%] h-[60%] bg-gold/5 blur-[150px] rounded-full" />
-      
-      <div className="w-full max-w-lg animate-fade-in relative z-10">
-        <div className="glass border border-white/5 p-12 md:p-16 rounded-[3.5rem] shadow-2xl relative overflow-hidden group">
-          <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-gold/10 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-1000" />
-          
-          <div className="flex justify-center mb-12">
-            <div className="h-20 w-20 glass rounded-3xl border border-white/10 flex items-center justify-center relative overflow-hidden group-hover:border-gold/30 transition-all duration-500 transform group-hover:-rotate-6">
-              <User className="text-gold/40 w-10 h-10 group-hover:text-gold transition-colors duration-500" />
-            </div>
-          </div>
+    <div style={{ minHeight: "100vh", display: "flex", background: "#10100e", color: "#f0ede6" }}>
 
-          <div className="text-center mb-12 space-y-4">
-            <div className="h-px w-12 bg-gold/50 mx-auto opacity-50" />
-            <h1 className="text-4xl md:text-5xl font-serif italic gold-gradient tracking-tight leading-tight">
-              Manifest <span className="text-white">Existence</span>
-            </h1>
-            <p className="text-zinc-600 font-bold uppercase tracking-[0.4em] text-[10px]">
-              Join the Sacred Path
-            </p>
-          </div>
+      {/* LEFT PANEL */}
+      <div className="hidden md:flex" style={{
+        width: "45%", position: "relative", overflow: "hidden",
+        flexDirection: "column", justifyContent: "space-between", padding: "40px",
+        background: "#1c1c18",
+      }}>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, rgba(16,16,14,0.1) 0%, rgba(16,16,14,0.7) 60%, rgba(16,16,14,0.95) 100%)", zIndex: 1 }} />
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 50% at 30% 60%, rgba(212,169,74,0.08) 0%, transparent 70%)" }} />
 
+        <div style={{ position: "relative", zIndex: 2 }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+            <svg width="28" height="28" viewBox="0 0 48 48" fill="#d4a94a">
+              <path d="M8.578 8.578C5.528 11.628 3.451 15.515 2.61 19.745 1.768 23.976 2.2 28.361 3.85 32.346 5.501 36.331 8.297 39.738 11.883 42.134 15.47 44.53 19.686 45.81 24 45.81c4.313 0 8.53-1.28 12.117-3.676 3.586-2.396 6.382-5.803 8.033-9.788 1.65-3.985 2.082-8.37 1.241-12.601-.842-4.23-2.919-8.117-5.969-11.167L24 24 8.578 8.578Z" />
+            </svg>
+            <span style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "22px", fontWeight: 600, letterSpacing: "0.04em", color: "#d4a94a" }}>Akaal</span>
+          </Link>
+        </div>
+
+        <div style={{ position: "relative", zIndex: 2, marginTop: "auto" }}>
+          <p style={{ fontFamily: "var(--font-serif)", fontSize: "24px", fontWeight: 500, color: "#f0ede6", lineHeight: 1.35, marginBottom: "12px", fontStyle: "italic" }}>
+            &ldquo;The soul is neither born, and nor does it die.&rdquo;
+          </p>
+          <p style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" }}>— Bhagavad Gita, 2.20</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "28px" }}>
+            {[
+              "Free shipping on orders above ₹999",
+              "30-day returns, no questions asked",
+              "Energised before every dispatch",
+              "Authenticity certified on every item",
+            ].map(item => (
+              <div key={item} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "rgba(200,195,178,0.65)" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "rgba(212,169,74,0.6)" }}>check_circle</span>
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT PANEL */}
+      <div style={{
+        flex: 1, display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: "40px 60px", position: "relative",
+      }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 600px 500px at 50% 50%, rgba(212,169,74,0.025) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+        <div style={{ width: "100%", maxWidth: "420px", position: "relative", zIndex: 1 }}>
           {success ? (
-            <div className="text-center py-12 space-y-8 animate-scale-in">
-              <div className="flex justify-center relative">
-                 <div className="absolute inset-0 bg-gold/20 blur-3xl rounded-full scale-150 animate-pulse" />
-                 <CheckCircle2 className="w-20 h-20 text-gold relative z-10" />
+            <div style={{ textAlign: "center", padding: "48px 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+              <div style={{ width: "72px", height: "72px", borderRadius: "20px", background: "rgba(212,169,74,0.1)", border: "1px solid rgba(212,169,74,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "36px", color: "#d4a94a" }}>check_circle</span>
               </div>
-              <div className="space-y-2">
-                 <h2 className="text-2xl font-serif italic text-white">Vessel Registered</h2>
-                 <p className="text-zinc-500 font-light tracking-widest text-sm uppercase">Entering the Sanctuary...</p>
-              </div>
+              <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "26px", fontWeight: 600, color: "#f0ede6", margin: 0 }}>Account Created!</h2>
+              <p style={{ fontSize: "14px", color: "rgba(160,155,135,0.45)" }}>Redirecting you to sign in…</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <>
+              <h1 style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "32px", fontWeight: 600, color: "#f0ede6", marginBottom: "6px" }}>
+                Create your account.
+              </h1>
+              <p style={{ fontSize: "13px", color: "rgba(200,195,178,0.65)", marginBottom: "28px", lineHeight: 1.5 }}>
+                Join the Akaal community and begin your spiritual journey.
+              </p>
+
               {error && (
-                <div className="bg-red-950/20 border border-red-500/20 text-red-400 px-5 py-4 rounded-2xl flex items-center gap-4 text-xs font-medium animate-shake">
-                  <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
-                  <p>{error}</p>
+                <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "8px", padding: "12px 14px", fontSize: "12px", color: "#f87171", marginBottom: "16px" }}>
+                  {error}
                 </div>
               )}
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.3em] ml-2">
-                  Full Name
-                </label>
-                <div className="relative group">
-                  <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700 group-focus-within:text-gold transition-colors" />
-                  <input
-                    {...register("name")}
-                    className="w-full bg-zinc-950/50 border border-white/5 rounded-2xl px-14 py-5 text-white placeholder:text-zinc-800 focus:outline-none focus:border-gold/30 focus:ring-1 focus:ring-gold/30 transition-all duration-500 text-sm"
-                    placeholder="John Doe"
-                    autoComplete="name"
-                  />
+              <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={labelStyle}>Full Name</label>
+                  <div style={{ position: "relative" }}>
+                    <span className="material-symbols-outlined" style={iconStyle}>person</span>
+                    <input {...register("name")} placeholder="Priya Sharma" style={inputStyle} autoComplete="name" />
+                  </div>
+                  {errors.name && <p style={{ fontSize: "10px", color: "#f87171" }}>{errors.name.message}</p>}
                 </div>
-                {errors.name && (
-                  <p className="text-[10px] text-red-500/60 ml-2 font-medium tracking-wide">{errors.name.message}</p>
-                )}
-              </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.3em] ml-2">
-                  Existence Mail
-                </label>
-                <div className="relative group">
-                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700 group-focus-within:text-gold transition-colors" />
-                  <input
-                    {...register("email")}
-                    className="w-full bg-zinc-950/50 border border-white/5 rounded-2xl px-14 py-5 text-white placeholder:text-zinc-800 focus:outline-none focus:border-gold/30 focus:ring-1 focus:ring-gold/30 transition-all duration-500 text-sm"
-                    placeholder="seeker@destiny.com"
-                    autoComplete="email"
-                  />
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={labelStyle}>Email Address</label>
+                  <div style={{ position: "relative" }}>
+                    <span className="material-symbols-outlined" style={iconStyle}>mail</span>
+                    <input {...register("email")} type="email" placeholder="priya@gmail.com" style={inputStyle} autoComplete="email" />
+                  </div>
+                  {errors.email && <p style={{ fontSize: "10px", color: "#f87171" }}>{errors.email.message}</p>}
                 </div>
-                {errors.email && (
-                  <p className="text-[10px] text-red-500/60 ml-2 font-medium tracking-wide">{errors.email.message}</p>
-                )}
-              </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.3em] ml-2">
-                  Secret Attunement
-                </label>
-                <div className="relative group">
-                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700 group-focus-within:text-gold transition-colors" />
-                  <input
-                    type="password"
-                    {...register("password")}
-                    className="w-full bg-zinc-950/50 border border-white/5 rounded-2xl px-14 py-5 text-white placeholder:text-zinc-800 focus:outline-none focus:border-gold/30 focus:ring-1 focus:ring-gold/30 transition-all duration-500 text-sm"
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                  />
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={labelStyle}>Password</label>
+                  <div style={{ position: "relative" }}>
+                    <span className="material-symbols-outlined" style={iconStyle}>lock</span>
+                    <input
+                      {...register("password")}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      style={{ ...inputStyle, paddingRight: "40px" }}
+                      autoComplete="new-password"
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
+                      position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)",
+                      border: "none", background: "none", cursor: "pointer", color: "rgba(160,155,135,0.45)",
+                    }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>{showPassword ? "visibility_off" : "visibility"}</span>
+                    </button>
+                  </div>
+                  {errors.password && <p style={{ fontSize: "10px", color: "#f87171" }}>{errors.password.message}</p>}
                 </div>
-                {errors.password && (
-                  <p className="text-[10px] text-red-500/60 ml-2 font-medium tracking-wide">{errors.password.message}</p>
-                )}
-              </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-white hover:bg-gold disabled:opacity-50 text-black font-bold py-5 rounded-2xl shadow-2xl transition-all duration-700 flex items-center justify-center gap-4 group relative overflow-hidden mt-4"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em]">
-                  {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      Harmonize
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </span>
-                <div className="absolute inset-0 bg-gold/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-            </form>
-          )}
+                <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", margin: "4px 0 0" }}>
+                  By creating an account you agree to our{" "}
+                  <Link href="#" style={{ color: "rgba(212,169,74,0.6)", textDecoration: "none" }}>Terms of Service</Link>
+                </p>
 
-          {!success && (
-            <footer className="mt-12 text-center space-y-6">
-              <div className="h-px w-8 bg-white/5 mx-auto" />
-              <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-[0.2em]">
-                Already recognized?{" "}
-                <Link 
-                  href="/login" 
-                  className="text-white hover:text-gold underline decoration-white/10 underline-offset-8 transition-all"
-                >
-                  Enter Sanctuary
-                </Link>
+                <button type="submit" disabled={isLoading} style={{
+                  width: "100%", padding: "13px",
+                  background: "#d4a94a", color: "#10100e",
+                  fontSize: "13px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
+                  border: "none", borderRadius: "9px", cursor: "pointer", marginTop: "8px",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  opacity: isLoading ? 0.7 : 1, transition: "all .2s",
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>person_add</span>
+                  {isLoading ? "Creating Account…" : "Create Account"}
+                </button>
+              </form>
+
+              <p style={{ textAlign: "center", fontSize: "12px", color: "rgba(160,155,135,0.45)", marginTop: "20px" }}>
+                Already have an account?{" "}
+                <Link href="/login" style={{ color: "rgba(212,169,74,0.7)", textDecoration: "none", fontWeight: 600 }}>Sign in</Link>
               </p>
-            </footer>
+            </>
           )}
         </div>
       </div>
+
+      <footer style={{ position: "fixed", bottom: 0, right: 0, padding: "16px 60px", fontSize: "11px", color: "rgba(160,155,135,0.45)", display: "flex", gap: "16px" }}>
+        <Link href="#" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Privacy</Link>
+        <Link href="#" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Terms</Link>
+        <span>© 2026 Akaal Spiritual Arts</span>
+      </footer>
     </div>
   );
 }

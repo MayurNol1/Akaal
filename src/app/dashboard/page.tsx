@@ -1,14 +1,5 @@
 import { auth } from "@/auth";
 import Image from "next/image";
-import { 
-  Sparkles, 
-  Bell, 
-  Flower2, 
-  Award,
-  History,
-  HeartCrack,
-  Settings
-} from "lucide-react";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { LogoutButton } from "@/app/dashboard/logout-button";
@@ -17,219 +8,212 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const session = await auth();
-  
-  if (!session?.user?.id) {
-    return null;
-  }
 
-  // Fetch real data for the sanctuary
-  const ordersCount = await prisma.order.count({
-    where: { userId: session.user.id }
-  });
+  if (!session?.user?.id) return null;
 
+  const ordersCount = await prisma.order.count({ where: { userId: session.user.id } });
   const cart = await prisma.cart.findUnique({
     where: { userId: session.user.id },
-    include: { items: true }
+    include: { items: true },
   });
-  
+
   const activeIntentions = cart?.items.reduce((acc, item) => acc + item.quantity, 0) || 0;
-  
+
   const recentOrders = await prisma.order.findMany({
     where: { userId: session.user.id },
-    orderBy: { createdAt: 'desc' },
-    take: 3
+    orderBy: { createdAt: "desc" },
+    take: 5,
   });
 
+  const navItems = [
+    { icon: "shopping_bag", label: "My Orders", count: ordersCount, href: "/orders" },
+    { icon: "favorite_border", label: "Wishlist", href: "/wishlist" },
+    { icon: "person", label: "Profile", href: "/profile" },
+    { icon: "shield", label: "Security", href: "/settings" },
+    { icon: "location_on", label: "Addresses", href: "/settings" },
+  ];
 
   return (
-    <div className="min-h-screen bg-transparent pt-32 pb-20 px-6 max-w-7xl mx-auto animate-fade-in relative z-10">
-      <div className="flex flex-col gap-10">
-        
-        {/* Main Sanctuary Area */}
-        <div className="flex-1 space-y-12">
-          <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-white/5">
-            <div className="space-y-4">
-              <div className="h-px w-12 bg-primary/50" />
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">Personal Sanctuary</p>
-              <h1 className="text-5xl font-serif font-black italic text-white tracking-tight">
-                Namaste, <span className="text-primary not-italic">{session?.user?.name?.split(' ')[0] || "Seeker"}</span>
-              </h1>
-              <p className="text-zinc-500 font-medium">Your spiritual journey is flourishing today.</p>
-            </div>
-            <div className="flex items-center gap-6">
-               <LogoutButton />
-               <button className="h-14 w-14 bg-white/5 rounded-2xl flex items-center justify-center text-zinc-500 hover:text-primary transition-colors relative">
-                  <Bell size={20} />
-                  <span className="absolute top-4 right-4 h-2 w-2 bg-primary rounded-full shadow-[0_0_8px_rgba(236,149,19,0.6)]" />
-               </button>
-            </div>
-          </header>
+    <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px" }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "40px clamp(16px,4vw,48px) 80px", display: "flex", gap: "clamp(20px,3vw,40px)", alignItems: "flex-start" }}>
 
-          {/* Glowing Status Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <StatusCard 
-              label="Dharma Credits" 
-              value={(ordersCount * 150).toString()} 
-              unit="pts" 
-              icon={<Flower2 size={24} />} 
-              color="primary"
-            />
-            <StatusCard 
-              label="Manifested Relics" 
-              value={ordersCount.toString().padStart(2, '0')} 
-              unit="items" 
-              icon={<Award size={24} />} 
-              color="saffron"
-            />
-            <StatusCard 
-              label="Active Intentions" 
-              value={activeIntentions.toString().padStart(2, '0')} 
-              unit="rituals" 
-              icon={<Sparkles size={24} />} 
-              color="cyan"
-            />
+        {/* ── SIDEBAR ── */}
+        <aside style={{
+          width: "270px", flexShrink: 0,
+          background: "#161612", border: "1px solid rgba(212,169,74,0.1)",
+          borderRadius: "18px", padding: "28px", position: "sticky", top: "90px",
+        }}>
+          {/* Profile */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", paddingBottom: "24px", borderBottom: "1px solid rgba(212,169,74,0.1)", gap: "12px" }}>
+            <div style={{
+              width: "80px", height: "80px", borderRadius: "50%",
+              border: "3px solid #d4a94a", overflow: "hidden", position: "relative",
+            }}>
+              <Image
+                src={session.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDb9HxOmlluH2qUdJkJzGw0kBx49GCM0HpWK5hrJJE0zuqXExpKlTBAIgmxzvVgRKw6Ny46fqG9KIj4nLjOjB-ljAg2W6oXuI0cqCnyI1s9AgrsQRY0iHEb5g08VHRGOVW0iXh30dhVPSLnLCcyiOPTdtwdEKkinVMq3kovK6x2Vh18D0OxW5Mmkis_2TtVZpYMUI9fX2O5On1dIcDKT-3nbj64A56WkBYyMkz_dXUaIAvDxPLjRwbrDUqjz6p4febEV8uKJtS0sA4"}
+                alt="Profile"
+                fill
+                style={{ objectFit: "cover" }}
+              />
+            </div>
+            <div>
+              <p style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "18px", fontWeight: 600, color: "#f0ede6", margin: "0 0 2px" }}>
+                {session.user?.name || "Spiritual Seeker"}
+              </p>
+              <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", margin: 0 }}>
+                {session.user?.email}
+              </p>
+            </div>
+            <div style={{
+              padding: "4px 12px", borderRadius: "99px", fontSize: "10px", fontWeight: 700,
+              background: "rgba(212,169,74,0.1)", border: "1px solid rgba(212,169,74,0.2)", color: "#d4a94a",
+            }}>
+              Sacred Member
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-4">
-             <Link href="/orders" className="p-8 rounded-[32px] bg-white/2 border border-white/5 shadow-xl relative overflow-hidden group hover:scale-[1.02] hover:border-primary/20 transition-all duration-700 block">
-                 <div className="absolute inset-0 bg-linear-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                 <div className="relative z-10 space-y-4">
-                    <div className="size-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-primary group-hover:text-background-dark transition-all">
-                       <History size={24} />
-                    </div>
-                    <div>
-                       <h3 className="text-xl font-serif font-black text-white italic">Manifest Logs</h3>
-                       <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-1">Review past orders</p>
-                    </div>
-                 </div>
-             </Link>
-             <Link href="/wishlist" className="p-8 rounded-[32px] bg-white/2 border border-white/5 shadow-xl relative overflow-hidden group hover:scale-[1.02] hover:border-red-500/20 transition-all duration-700 block">
-                 <div className="absolute inset-0 bg-linear-to-br from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                 <div className="relative z-10 space-y-4">
-                    <div className="size-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-red-500 group-hover:text-white transition-all">
-                       <HeartCrack size={24} />
-                    </div>
-                    <div>
-                       <h3 className="text-xl font-serif font-black text-white italic">Silent Intentions</h3>
-                       <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-1">Saved artifacts</p>
-                    </div>
-                 </div>
-             </Link>
-             <Link href="/settings" className="p-8 rounded-[32px] bg-white/2 border border-white/5 shadow-xl relative overflow-hidden group hover:scale-[1.02] hover:border-zinc-500/40 transition-all duration-700 block">
-                 <div className="absolute inset-0 bg-linear-to-br from-zinc-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                 <div className="relative z-10 space-y-4">
-                    <div className="size-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-zinc-500 group-hover:text-white transition-all">
-                       <Settings size={24} />
-                    </div>
-                    <div>
-                       <h3 className="text-xl font-serif font-black text-white italic">Vessel Control</h3>
-                       <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-1">Manage profile</p>
-                    </div>
-                 </div>
-             </Link>
-          </div>
-
-          {/* Spiritual Path and Timeline */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2 space-y-10">
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-serif font-black text-white italic">Spiritual Path</h3>
-                <Link href="/orders" className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline underline-offset-4">Chronicles</Link>
-              </div>
-
-              <div className="relative space-y-0 before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-px before:bg-white/5">
-                {recentOrders.length > 0 ? (
-                  recentOrders.map((order, idx) => (
-                    <TimelineStep 
-                      key={order.id}
-                      title={`Manifestation Realized (${order.status})`}
-                      time={order.createdAt.toLocaleDateString()} 
-                      description={`"The universe has aligned. Order #${order.id.slice(0, 6)} has been recorded in the cosmos."`}
-                      isLatest={idx === 0}
-                    />
-                  ))
-                ) : (
-                  <TimelineStep 
-                    title="Sanctuary Joined" 
-                    time="Recently" 
-                    description="The path of Akal opens before you. Your history is waiting to be written."
-                    isLatest
-                  />
+          {/* Nav */}
+          <nav style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "4px" }}>
+            {navItems.map(item => (
+              <Link key={item.label} href={item.href} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "10px 12px", borderRadius: "10px",
+                textDecoration: "none", transition: "all 0.18s",
+                color: "rgba(200,195,178,0.65)", background: "transparent",
+                border: "1px solid transparent",
+              }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(212,169,74,0.06)"; (e.currentTarget as HTMLElement).style.color = "#f0ede6"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "rgba(200,195,178,0.65)"; }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>{item.icon}</span>
+                  <span style={{ fontSize: "12px", fontWeight: 500 }}>{item.label}</span>
+                </div>
+                {item.count !== undefined && (
+                  <span style={{
+                    fontSize: "10px", fontWeight: 700,
+                    background: "rgba(212,169,74,0.1)", color: "#d4a94a",
+                    padding: "2px 8px", borderRadius: "99px",
+                  }}>{item.count}</span>
                 )}
+              </Link>
+            ))}
+          </nav>
+
+          <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid rgba(212,169,74,0.1)" }}>
+            <LogoutButton />
+          </div>
+        </aside>
+
+        {/* ── MAIN CONTENT ── */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "24px" }}>
+
+          {/* Greeting */}
+          <div style={{ marginBottom: "8px" }}>
+            <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#d4a94a", marginBottom: "8px" }}>Welcome back</p>
+            <h1 style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "clamp(28px,3vw,38px)", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
+              Namaste, <em style={{ color: "#d4a94a" }}>{session?.user?.name?.split(" ")[0] || "Seeker"}</em> 🙏
+            </h1>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+            {[
+              { icon: "shopping_bag", label: "Total Orders", value: ordersCount, unit: "orders" },
+              { icon: "favorite_border", label: "Wishlist", value: activeIntentions, unit: "saved" },
+              { icon: "stars", label: "Loyalty Points", value: ordersCount * 150, unit: "pts" },
+            ].map(stat => (
+              <div key={stat.label} style={{
+                background: "#161612", border: "1px solid rgba(212,169,74,0.1)",
+                borderRadius: "14px", padding: "20px",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(212,169,74,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>{stat.icon}</span>
+                  </div>
+                  <span style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", fontWeight: 500 }}>{stat.label}</span>
+                </div>
+                <p style={{ fontFamily: "var(--font-serif)", fontSize: "32px", fontWeight: 700, color: "#f0ede6", margin: "0 0 2px" }}>{stat.value}</p>
+                <p style={{ fontSize: "10px", color: "rgba(160,155,135,0.45)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{stat.unit}</p>
               </div>
+            ))}
+          </div>
+
+          {/* Recent Orders */}
+          <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "14px", overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid rgba(212,169,74,0.08)" }}>
+              <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 600, color: "#f0ede6", margin: 0 }}>Recent Orders</h2>
+              <Link href="/orders" style={{ fontSize: "12px", color: "#d4a94a", textDecoration: "none", fontWeight: 600 }}>View All</Link>
             </div>
 
-            {/* Sidebar Content */}
-            <div className="space-y-10">
-              <div className="p-8 rounded-[32px] bg-white/2 border border-primary/10 relative overflow-hidden group shadow-2xl">
-                <div className="absolute inset-0 bg-linear-to-br from-primary/10 to-transparent" />
-                <h4 className="text-xl font-serif font-black text-white italic mb-6 relative z-10">Journey Insight</h4>
-                <div className="relative aspect-video rounded-2xl overflow-hidden mb-6 z-10 border border-white/5 bg-zinc-900">
-                   <Image 
-                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaCbEmbc1KAmAmxrKT1kS4ZhpG2i6z224ybEjIi0Mlr5I5uKwMY6g5wlhnRAyjhCT104S03SYkdV63WI90MffbLbuKHvOViQcC4QfNE5Mg7Y3o4dw8o0KZSfGlJVIU0PyBh_SzGOMZMZ7DipilzXiXt5adiMe9stXazj5NBPJRwleTjHkwao19jVIwvsVAgWv-aAb9AAfvU5YXnaA7Y6N8AnxZWNcC7qLgY-eolAWX5-HvotVUIV3UaSm5sR1m31PJ7wYjVOd0TZQ" 
-                     alt="Meditation Path" 
-                     fill 
-                     className="object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-1000"
-                   />
-                </div>
-                <div className="relative z-10 space-y-4">
-                  <p className="font-serif font-black text-white italic">Path of Constant Presence</p>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">Expand your vibration and discover new sacred artifacts for your collection.</p>
-                  <Link href="/products" className="block w-full py-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-background-dark transition-all duration-500 shadow-xl text-center">
-                    Continue Journey
-                  </Link>
-                </div>
+            {recentOrders.length === 0 ? (
+              <div style={{ padding: "48px 24px", textAlign: "center" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "48px", color: "rgba(212,169,74,0.12)", display: "block", marginBottom: "12px" }}>inventory_2</span>
+                <p style={{ fontSize: "14px", color: "rgba(160,155,135,0.45)", fontStyle: "italic" }}>No orders yet. Begin your sacred journey.</p>
+                <Link href="/products" style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginTop: "16px", padding: "10px 20px", background: "rgba(212,169,74,0.08)", color: "#d4a94a", borderRadius: "8px", textDecoration: "none", fontSize: "12px", fontWeight: 700, border: "1px solid rgba(212,169,74,0.14)" }}>
+                  Browse Collections
+                </Link>
               </div>
-            </div>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid rgba(212,169,74,0.08)" }}>
+                    {["Order ID", "Date", "Status", "Total", ""].map(h => (
+                      <th key={h} style={{ padding: "12px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(160,155,135,0.45)" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentOrders.map((order) => (
+                    <tr key={order.id} style={{ borderBottom: "1px solid rgba(212,169,74,0.05)", transition: "background 0.15s" }}>
+                      <td style={{ padding: "14px 24px", fontFamily: "monospace", fontSize: "11px", color: "#d4a94a" }}>#AK-{order.id.slice(-6).toUpperCase()}</td>
+                      <td style={{ padding: "14px 24px", color: "rgba(160,155,135,0.45)" }}>{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
+                      <td style={{ padding: "14px 24px" }}>
+                        <span style={{
+                          padding: "3px 10px", borderRadius: "99px", fontSize: "10px", fontWeight: 700,
+                          background: order.status === "DELIVERED" ? "rgba(37,226,244,0.08)" : "rgba(212,169,74,0.08)",
+                          border: `1px solid ${order.status === "DELIVERED" ? "rgba(37,226,244,0.2)" : "rgba(212,169,74,0.2)"}`,
+                          color: order.status === "DELIVERED" ? "#25e2f4" : "#d4a94a",
+                        }}>{order.status}</span>
+                      </td>
+                      <td style={{ padding: "14px 24px", fontFamily: "var(--font-serif)", fontSize: "14px", fontWeight: 700, color: "#f0ede6" }}>₹{Number(order.total).toFixed(0)}</td>
+                      <td style={{ padding: "14px 24px" }}>
+                        <Link href={`/orders/${order.id}`} style={{ fontSize: "11px", color: "#d4a94a", textDecoration: "none", fontWeight: 600 }}>View</Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+            {[
+              { icon: "shopping_bag", label: "Browse Collections", sub: "Discover new artifacts", href: "/products", color: "#d4a94a" },
+              { icon: "favorite_border", label: "My Wishlist", sub: "Saved items", href: "/wishlist", color: "#f87171" },
+              { icon: "support_agent", label: "Get Support", sub: "We're here to help", href: "mailto:support@akal.com", color: "#25e2f4" },
+            ].map(action => (
+              <Link key={action.label} href={action.href} style={{ textDecoration: "none" }}>
+                <div style={{
+                  background: "#161612", border: "1px solid rgba(212,169,74,0.08)",
+                  borderRadius: "14px", padding: "20px",
+                  transition: "transform 0.2s, border-color 0.2s",
+                  cursor: "pointer",
+                }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(212,169,74,0.2)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(212,169,74,0.08)"; }}
+                >
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: `${action.color}15`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "14px" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "20px", color: action.color }}>{action.icon}</span>
+                  </div>
+                  <p style={{ fontSize: "13px", fontWeight: 700, color: "#f0ede6", margin: "0 0 4px" }}>{action.label}</p>
+                  <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", margin: 0 }}>{action.sub}</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function StatusCard({ label, value, unit, icon, color }: { label: string, value: string, unit: string, icon: React.ReactNode, color: string }) {
-  const colors: Record<string, string> = {
-    primary: "from-primary/20 to-transparent border-primary/10 text-primary",
-    saffron: "from-orange-500/20 to-transparent border-orange-500/10 text-orange-500",
-    cyan: "from-cyan-500/20 to-transparent border-cyan-500/10 text-cyan-400"
-  };
-
-  return (
-    <div className={`p-8 rounded-[32px] bg-white/2 border shadow-xl relative overflow-hidden group hover:scale-[1.02] transition-all duration-700 bg-linear-to-br ${colors[color]}`}>
-      <div className="flex flex-col gap-6 relative z-10">
-        <div className={`size-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all`}>
-          {icon}
-        </div>
-        <div className="space-y-1">
-          <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.3em]">{label}</p>
-          <p className="text-4xl font-serif font-black text-white italic tracking-tighter">
-            {value} <span className="text-sm font-sans not-italic text-zinc-500 ml-1">{unit}</span>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TimelineStep({ title, time, description, isLatest }: { title: string, time: string, description: string, isLatest?: boolean }) {
-  return (
-    <div className="relative flex gap-8 pb-12 group">
-      <div className={`relative z-10 size-10 rounded-full border-4 border-[#0a0a0a] flex items-center justify-center transition-all duration-500 ${
-        isLatest ? "bg-primary shadow-[0_0_20px_rgba(236,149,19,0.4)]" : "bg-white/5"
-      }`}>
-        <Sparkles size={16} className={isLatest ? "text-white" : "text-zinc-600"} />
-      </div>
-      <div className="space-y-2">
-        <h4 className={`text-lg font-serif font-black italic transition-colors ${isLatest ? "text-white" : "text-zinc-400 group-hover:text-white"}`}>{title}</h4>
-        <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">{time}</p>
-        {description && (
-          <div className={`mt-4 p-5 rounded-2xl border transition-all duration-500 ${
-            isLatest ? "bg-primary/5 border-primary/20" : "bg-white/2 border-white/5 group-hover:border-white/10"
-          }`}>
-            <p className="text-[11px] text-zinc-400 italic font-medium leading-relaxed">{description}</p>
-          </div>
-        )}
       </div>
     </div>
   );
