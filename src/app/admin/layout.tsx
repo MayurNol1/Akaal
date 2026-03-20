@@ -3,6 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { redirect, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 import { NotificationBell } from "./notification-bell";
 import { useRouter } from "next/navigation";
@@ -129,8 +130,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div style={{ padding: "12px 10px", borderTop: "1px solid rgba(212,169,74,0.1)" }}>
           {!sidebarCollapsed && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 6px", marginBottom: "4px" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(212,169,74,0.3)", flexShrink: 0 }}>
-                <img src={session?.user?.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop"} alt="Admin" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(212,169,74,0.3)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(212,169,74,0.05)" }}>
+                {session?.user?.image ? (
+                  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+                    <Image src={session.user.image} alt="Admin" fill style={{ objectFit: "cover" }} />
+                  </div>
+                ) : (
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>person</span>
+                )}
               </div>
               <div>
                 <p style={{ fontSize: "12px", fontWeight: 700, color: "#f0ede6", margin: 0 }}>{session?.user?.name}</p>

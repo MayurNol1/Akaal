@@ -183,9 +183,20 @@ export default async function ProductListingPage(props: {
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-              {products.map((product: Product) => (
-                <ProductCardStitch key={product.id} product={product} />
-              ))}
+              {products.map((product) => {
+                // Pre-serialize Decimal to number for Client Component compatibility
+                const serializedProduct = {
+                  ...product,
+                  price: Number(product.price)
+                } as unknown as Product; 
+
+                return (
+                  <ProductCardStitch 
+                    key={product.id} 
+                    product={serializedProduct} 
+                  />
+                );
+              })}
             </div>
           )}
           <div style={{ marginTop: "36px" }}>

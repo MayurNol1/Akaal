@@ -110,6 +110,12 @@ h1, h2, h3, h4, .font-serif {
 }
 .animate-scroll-drop { animation: scroll-drop 2s ease-in-out infinite; }
 
+@keyframes circle-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.05; }
+  50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.18; }
+}
+.animate-circle-pulse { animation: circle-pulse 8s ease-in-out infinite; }
+
 /* Product Card */
 .product-card {
   background: var(--s1);

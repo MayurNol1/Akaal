@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { CartService } from "@/modules/cart/service";
+import { PaymentSelector } from "./payment-selector";
 
 export const dynamic = "force-dynamic";
 
@@ -122,22 +123,7 @@ export default async function CheckoutPage() {
                 <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 600, color: "#f0ede6", marginBottom: "16px" }}>
                   Payment <em style={{ color: "#d4a94a" }}>Method</em>
                 </h2>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {[
-                    { id: "stripe", icon: "credit_card", label: "Credit / Debit Card", sub: "Visa, Mastercard, Amex" },
-                    { id: "upi", icon: "smartphone", label: "UPI Payment", sub: "GPay, PhonePe, BHIM" },
-                    { id: "cod", icon: "local_shipping", label: "Cash on Delivery", sub: "Pay when delivered" },
-                  ].map((method, i) => (
-                    <label key={method.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px", borderRadius: "10px", border: `1px solid ${i === 0 ? "#d4a94a" : "rgba(212,169,74,0.1)"}`, background: i === 0 ? "rgba(212,169,74,0.05)" : "transparent", cursor: "pointer" }}>
-                      <input type="radio" name="payment" defaultChecked={i === 0} style={{ accentColor: "#d4a94a" }} />
-                      <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>{method.icon}</span>
-                      <div>
-                        <p style={{ fontSize: "13px", fontWeight: 600, color: "#f0ede6", margin: 0 }}>{method.label}</p>
-                        <p style={{ fontSize: "10px", color: "rgba(160,155,135,0.45)", margin: 0 }}>{method.sub}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+                <PaymentSelector />
               </div>
 
               {/* Trust badges */}

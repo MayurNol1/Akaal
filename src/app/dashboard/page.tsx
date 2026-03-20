@@ -45,17 +45,23 @@ export default async function DashboardPage() {
         }}>
           {/* Profile */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", paddingBottom: "24px", borderBottom: "1px solid rgba(212,169,74,0.1)", gap: "12px" }}>
-            <div style={{
-              width: "80px", height: "80px", borderRadius: "50%",
-              border: "3px solid #d4a94a", overflow: "hidden", position: "relative",
-            }}>
-              <Image
-                src={session.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDb9HxOmlluH2qUdJkJzGw0kBx49GCM0HpWK5hrJJE0zuqXExpKlTBAIgmxzvVgRKw6Ny46fqG9KIj4nLjOjB-ljAg2W6oXuI0cqCnyI1s9AgrsQRY0iHEb5g08VHRGOVW0iXh30dhVPSLnLCcyiOPTdtwdEKkinVMq3kovK6x2Vh18D0OxW5Mmkis_2TtVZpYMUI9fX2O5On1dIcDKT-3nbj64A56WkBYyMkz_dXUaIAvDxPLjRwbrDUqjz6p4febEV8uKJtS0sA4"}
-                alt="Profile"
-                fill
-                style={{ objectFit: "cover" }}
-              />
-            </div>
+              <div style={{
+                width: "80px", height: "80px", borderRadius: "50%",
+                border: "3px solid #d4a94a", overflow: "hidden", position: "relative",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(212,169,74,0.05)",
+              }}>
+                {session.user?.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt="Profile"
+                    fill
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <span className="material-symbols-outlined" style={{ fontSize: "40px", color: "#d4a94a" }}>person</span>
+                )}
+              </div>
             <div>
               <p style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "18px", fontWeight: 600, color: "#f0ede6", margin: "0 0 2px" }}>
                 {session.user?.name || "Spiritual Seeker"}
