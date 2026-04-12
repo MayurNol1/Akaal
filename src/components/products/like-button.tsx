@@ -13,6 +13,7 @@ export function LikeButton({ productId, variant = "default" }: LikeButtonProps) 
 
   useEffect(() => {
     const isLiked = localStorage.getItem(`liked_${productId}`) === "true";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLiked(isLiked);
   }, [productId]);
 
@@ -33,9 +34,7 @@ export function LikeButton({ productId, variant = "default" }: LikeButtonProps) 
     return (
       <button 
         onClick={toggleLike}
-        className={`absolute top-5 right-5 z-20 p-2.5 rounded-full bg-black/60 backdrop-blur-md border border-white/5 transition-all ${
-          liked ? 'text-red-500 hover:text-red-400' : 'text-zinc-400 hover:text-primary'
-        }`}
+        style={{ position:"absolute", top:"10px", right:"10px", zIndex:20, padding:"8px", borderRadius:"50%", background:"rgba(0,0,0,0.6)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.06)", cursor:"pointer", transition:"all 0.2s" }}
       >
         <Heart size={16} fill={liked ? "currentColor" : "none"} className={liked ? "scale-110" : "scale-100"} />
       </button>

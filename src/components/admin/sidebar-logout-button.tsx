@@ -1,16 +1,29 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { LogOut } from "lucide-react";
 
 export function SidebarLogoutButton() {
   return (
     <button
       onClick={() => signOut({ callbackUrl: "/" })}
-      className="w-full flex items-center gap-3 px-4 py-3 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all duration-300 group"
+      style={{
+        width: "100%", display: "flex", alignItems: "center", gap: "10px",
+        padding: "9px 10px", borderRadius: "8px",
+        background: "transparent", border: "none", cursor: "pointer",
+        color: "rgba(160,155,135,0.45)", fontSize: "12px",
+        fontWeight: 500, transition: "color 0.18s, background 0.18s",
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.color = "#f87171";
+        (e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.06)";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.color = "rgba(160,155,135,0.45)";
+        (e.currentTarget as HTMLElement).style.background = "transparent";
+      }}
     >
-      <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-      <span className="font-bold text-xs uppercase tracking-widest">Logout</span>
+      <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>logout</span>
+      Sign Out
     </button>
   );
 }

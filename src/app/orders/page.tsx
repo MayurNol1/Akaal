@@ -4,17 +4,18 @@ import { getOrdersForUser } from "@/modules/orders/service";
 
 export const dynamic = "force-dynamic";
 
-const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  PENDING:   { label: "Pending",    color: "#ff9933",  bg: "rgba(255,153,51,0.08)",   border: "rgba(255,153,51,0.2)" },
-  PAID:      { label: "Paid",       color: "#d4a94a",  bg: "rgba(212,169,74,0.08)",   border: "rgba(212,169,74,0.2)" },
-  SHIPPED:   { label: "Shipped",    color: "#bb86fc",  bg: "rgba(187,134,252,0.08)",  border: "rgba(187,134,252,0.2)" },
-  DELIVERED: { label: "Delivered",  color: "#25e2f4",  bg: "rgba(37,226,244,0.08)",   border: "rgba(37,226,244,0.2)" },
-  CANCELLED: { label: "Cancelled",  color: "#f87171",  bg: "rgba(248,113,113,0.08)",  border: "rgba(248,113,113,0.2)" },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  PENDING:   { label: "Processing", color: "#ff9933", bg: "rgba(255,153,51,0.08)",  border: "rgba(255,153,51,0.2)" },
+  PAID:      { label: "Paid",       color: "#d4a94a", bg: "rgba(212,169,74,0.08)",  border: "rgba(212,169,74,0.2)" },
+  SHIPPED:   { label: "Shipped",    color: "#bb86fc", bg: "rgba(187,134,252,0.08)", border: "rgba(187,134,252,0.2)" },
+  DELIVERED: { label: "Delivered",  color: "#25e2f4", bg: "rgba(37,226,244,0.08)",  border: "rgba(37,226,244,0.2)" },
+  CANCELLED: { label: "Cancelled",  color: "#f87171", bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.2)" },
 };
 
-export default async function OrdersPage() {
+export default async function OrdersPage({ searchParams }: { searchParams?: Promise<{ success?: string }> }) {
+  const params = await searchParams;
+  const isSuccess = params?.success === "1";
   const session = await auth();
-
   if (!session?.user?.id) {
     return (
       <div style={{ background: "#10100e", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
@@ -25,8 +26,7 @@ export default async function OrdersPage() {
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "26px", fontWeight: 600, color: "#f0ede6", marginBottom: "10px" }}>Sign In Required</h1>
           <p style={{ fontSize: "13px", color: "rgba(160,155,135,0.45)", lineHeight: 1.6, marginBottom: "28px" }}>Please sign in to view your order history.</p>
           <Link href="/login" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: "#d4a94a", color: "#10100e", borderRadius: "10px", padding: "13px 28px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none" }}>
-            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>login</span>
-            Sign In
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>login</span>Sign In
           </Link>
         </div>
       </div>
@@ -34,6 +34,11 @@ export default async function OrdersPage() {
   }
 
   const orders = await getOrdersForUser(session.user.id);
+
+  // ── ORDER SUCCESS BANNER ──
+  if (isSuccess) {
+    // Show success state above the orders list — rendered below
+  }
 
   return (
     <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px" }}>
@@ -43,7 +48,7 @@ export default async function OrdersPage() {
         <div style={{ marginBottom: "40px" }}>
           <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#d4a94a", marginBottom: "8px" }}>Account</p>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-            <h1 style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "clamp(28px,4vw,40px)", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(28px,4vw,40px)", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
               My <em style={{ color: "#d4a94a" }}>Orders</em>
             </h1>
             <span style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)", padding: "6px 14px", background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "8px" }}>
@@ -52,7 +57,30 @@ export default async function OrdersPage() {
           </div>
         </div>
 
-        {/* Empty State */}
+        {/* ── SUCCESS BANNER ── */}
+        {isSuccess && (
+          <div style={{
+            marginBottom: "28px",
+            background: "rgba(37,226,244,0.06)",
+            border: "1px solid rgba(37,226,244,0.2)",
+            borderRadius: "14px",
+            padding: "20px 24px",
+            display: "flex", alignItems: "center", gap: "16px",
+          }}>
+            <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(37,226,244,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "24px", color: "#25e2f4", fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            </div>
+            <div>
+              <p style={{ fontFamily: "var(--font-serif)", fontSize: "18px", fontWeight: 600, color: "#f0ede6", margin: "0 0 4px" }}>
+                Order Placed Successfully! 🙏
+              </p>
+              <p style={{ fontSize: "13px", color: "rgba(200,195,178,0.65)", margin: 0 }}>
+                Your sacred items are being prepared with intention. You&apos;ll receive a confirmation email shortly.
+              </p>
+            </div>
+          </div>
+        )}
+
         {orders.length === 0 ? (
           <div style={{ minHeight: "360px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", background: "#161612", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "16px", textAlign: "center", padding: "56px 40px" }}>
             <span className="material-symbols-outlined" style={{ fontSize: "72px", color: "rgba(212,169,74,0.12)" }}>inventory_2</span>
@@ -65,39 +93,47 @@ export default async function OrdersPage() {
             </Link>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {orders.map((order) => {
-              const st = statusConfig[order.status] || { label: order.status, color: "#d4a94a", bg: "rgba(212,169,74,0.08)", border: "rgba(212,169,74,0.2)" };
+              const st = STATUS_CONFIG[order.status] || STATUS_CONFIG.PENDING;
               return (
                 <Link key={order.id} href={`/orders/${order.id}`} style={{ textDecoration: "none" }}>
-                  <div className="bg-[#161612] border border-gold/10 rounded-xl p-5 md:p-6 flex items-center justify-between gap-4 flex-wrap transition-all cursor-pointer hover:border-gold/20 hover:-translate-y-[2px]">
-                    {/* Left */}
+                  <div 
+                    className="hover-lift"
+                    style={{
+                      background: "#161612", border: "1px solid rgba(212,169,74,0.08)",
+                      borderRadius: "14px", padding: "18px 22px",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      gap: "16px", flexWrap: "wrap",
+                      cursor: "pointer",
+                    }}
+                  >
                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                       <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(212,169,74,0.08)", border: "1px solid rgba(212,169,74,0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "#d4a94a" }}>shopping_bag</span>
                       </div>
                       <div>
-                        <p style={{ fontSize: "11px", color: "#d4a94a", fontFamily: "monospace", marginBottom: "4px" }}>#AK-{order.id.slice(-8).toUpperCase()}</p>
-                        <p style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: 600, color: "#f0ede6", margin: "0 0 4px" }}>
+                        <p style={{ fontSize: "11px", color: "#d4a94a", fontFamily: "monospace", marginBottom: "4px" }}>
+                          #AK-{order.id.slice(-8).toUpperCase()}
+                        </p>
+                        <p style={{ fontFamily: "var(--font-serif)", fontSize: "15px", fontWeight: 600, color: "#f0ede6", margin: "0 0 3px" }}>
                           {order.items.length} item{order.items.length !== 1 ? "s" : ""}
                         </p>
-                        <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)" }}>
+                        <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", margin: 0 }}>
                           {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                         </p>
                       </div>
                     </div>
-
-                    {/* Right */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
                       <div style={{ textAlign: "right" }}>
-                        <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", marginBottom: "4px" }}>Total</p>
-                        <p style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 700, color: "#f0ede6" }}>₹{Number(order.total).toLocaleString("en-IN")}</p>
+                        <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", marginBottom: "3px" }}>Total</p>
+                        <p style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 700, color: "#f0ede6", margin: 0 }}>
+                          ₹{Number(order.total).toLocaleString("en-IN")}
+                        </p>
                       </div>
-                      <span style={{
-                        padding: "5px 12px", borderRadius: "99px", fontSize: "10px", fontWeight: 700,
-                        color: st.color, background: st.bg, border: `1px solid ${st.border}`,
-                        whiteSpace: "nowrap",
-                      }}>{st.label}</span>
+                      <span style={{ padding: "5px 12px", borderRadius: "99px", fontSize: "10px", fontWeight: 700, color: st.color, background: st.bg, border: `1px solid ${st.border}`, whiteSpace: "nowrap" }}>
+                        {st.label}
+                      </span>
                       <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "rgba(160,155,135,0.3)" }}>chevron_right</span>
                     </div>
                   </div>

@@ -34,10 +34,10 @@ export function Pagination({ totalPages, currentPage }: { totalPages: number, cu
   };
 
   return (
-    <div className="pt-20 flex items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+    <div style={{ paddingTop:"56px", display:"flex", alignItems:"center", justifyContent:"center", gap:"16px", fontSize:"10px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.12em", color:"rgba(160,155,135,0.45)" }}>
       <Link 
         href={currentPage > 1 ? createPageURL(currentPage - 1) : "#"} 
-        className={`w-12 h-12 rounded-full border border-primary/20 flex items-center justify-center transition-all ${currentPage <= 1 ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'hover:border-primary hover:text-primary cursor-pointer'}`}
+        style={{ width:'48px', height:'48px', borderRadius:'50%', border:'1px solid rgba(212,169,74,0.2)', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s', opacity:currentPage <= 1 ? 0.2 : 1, cursor:currentPage <= 1 ? 'not-allowed' : 'pointer', pointerEvents:currentPage <= 1 ? 'none' : 'auto', color:'rgba(200,195,178,0.65)' }}
       >
         <ChevronLeft size={18} />
       </Link>
@@ -45,17 +45,13 @@ export function Pagination({ totalPages, currentPage }: { totalPages: number, cu
       <div className="flex items-center gap-3 px-4">
         {getPageNumbers().map((page, index) => {
           if (page === '...') {
-            return <span key={`ellipsis-${index}`} className="px-2 text-zinc-500">...</span>;
+            return <span key={`ellipsis-${index}`} style={{ padding:"0 8px", color:"rgba(160,155,135,0.4)" }}>...</span>;
           }
           return (
             <Link
               key={page}
               href={createPageURL(page)}
-              className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
-                currentPage === page 
-                  ? "bg-orange-500 text-background-dark font-black" 
-                  : "hover:bg-white/5 text-zinc-400 hover:text-white"
-              }`}
+              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:"36px", height:"36px", borderRadius:"50%", background:currentPage === page ? "#d4a94a" : "transparent", color:currentPage === page ? "#10100e" : "rgba(160,155,135,0.6)", fontWeight:currentPage === page ? 700 : 400, transition:"all 0.2s" }}
             >
               {page}
             </Link>
@@ -65,7 +61,7 @@ export function Pagination({ totalPages, currentPage }: { totalPages: number, cu
 
       <Link 
         href={currentPage < totalPages ? createPageURL(currentPage + 1) : "#"} 
-        className={`w-12 h-12 rounded-full border border-primary/20 flex items-center justify-center transition-all ${currentPage >= totalPages ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'hover:border-primary hover:text-primary cursor-pointer'}`}
+        style={{ width:'48px', height:'48px', borderRadius:'50%', border:'1px solid rgba(212,169,74,0.2)', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s', opacity:currentPage >= totalPages ? 0.2 : 1, cursor:currentPage >= totalPages ? 'not-allowed' : 'pointer', pointerEvents:currentPage >= totalPages ? 'none' : 'auto', color:'rgba(200,195,178,0.65)' }}
       >
         <ChevronRight size={18} />
       </Link>

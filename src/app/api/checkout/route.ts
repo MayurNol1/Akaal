@@ -1,12 +1,7 @@
 import { auth } from "@/auth";
-import { errorResponse } from "@/lib/api-responses";
+import { errorResponse, successResponse } from "@/lib/api-responses";
 import prisma from "@/lib/prisma";
-import Stripe from "stripe";
-
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, { apiVersion: "2025-01-27.acacia" as any })
-  : null;
+import { razorpay } from "@/lib/razorpay";
 
 export async function POST() {
   try {
@@ -14,10 +9,6 @@ export async function POST() {
 
     if (!session?.user?.id) {
       return errorResponse("Authentication required", 401);
-    }
-
-    if (!stripe) {
-      return errorResponse("Stripe is not configured", 500);
     }
 
     const cart = await prisma.cart.findUnique({
@@ -33,41 +24,38 @@ export async function POST() {
       return errorResponse("Cart is empty", 400);
     }
 
-    const lineItems = cart.items.map((item) => {
-      const priceNumber = Number(item.product.price);
+    // Calculate total in paise (INR * 100)
+    const totalAmount = cart.items.reduce((sum, item) => {
+      return sum + Number(item.product.price) * item.quantity;
+    }, 0);
 
-      return {
-        quantity: item.quantity,
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: item.product.name,
-          },
-          unit_amount: Math.round(priceNumber * 100),
-        },
-      };
-    });
+    const amountInPaise = Math.round(totalAmount * 100);
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: lineItems,
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/orders?success=1`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cart?canceled=1`,
-      metadata: {
+    // Create Razorpay Order
+    const options = {
+      amount: amountInPaise,
+      currency: "INR",
+      receipt: `receipt_${cart.id}`,
+      notes: {
         userId: session.user.id,
         cartId: cart.id,
       },
-    });
+    };
 
-    return new Response(null, {
-      status: 303,
-      headers: {
-        Location: checkoutSession.url ?? "/cart",
-      },
+    const order = await razorpay.orders.create(options);
+
+    return successResponse({
+      id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key: process.env.RAZORPAY_KEY_ID,
+      user: {
+        name: session.user.name,
+        email: session.user.email,
+      }
     });
   } catch (error) {
     console.error("POST /api/checkout error:", error);
     return errorResponse("Internal Server Error", 500);
   }
 }
-

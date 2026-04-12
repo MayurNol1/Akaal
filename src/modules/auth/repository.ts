@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { RegisterInput } from "./validation";
+import { Role } from "@prisma/client";
 
 export class AuthRepository {
   static async findUserByEmail(email: string) {
@@ -8,11 +9,11 @@ export class AuthRepository {
     });
   }
 
-  static async createUser(data: RegisterInput & { password: string; role?: string }) {
+  static async createUser(data: RegisterInput & { password: string; role?: Role }) {
     return prisma.user.create({
       data: {
         ...data,
-        role: (data.role as any) || "USER",
+        role: data.role || Role.USER,
       },
     });
   }

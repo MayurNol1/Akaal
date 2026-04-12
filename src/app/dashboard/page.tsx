@@ -45,23 +45,17 @@ export default async function DashboardPage() {
         }}>
           {/* Profile */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", paddingBottom: "24px", borderBottom: "1px solid rgba(212,169,74,0.1)", gap: "12px" }}>
-              <div style={{
-                width: "80px", height: "80px", borderRadius: "50%",
-                border: "3px solid #d4a94a", overflow: "hidden", position: "relative",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: "rgba(212,169,74,0.05)",
-              }}>
-                {session.user?.image ? (
-                  <Image
-                    src={session.user.image}
-                    alt="Profile"
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
-                ) : (
-                  <span className="material-symbols-outlined" style={{ fontSize: "40px", color: "#d4a94a" }}>person</span>
-                )}
-              </div>
+            <div style={{
+              width: "80px", height: "80px", borderRadius: "50%",
+              border: "3px solid #d4a94a", overflow: "hidden", position: "relative",
+            }}>
+              <Image
+                src={session.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDb9HxOmlluH2qUdJkJzGw0kBx49GCM0HpWK5hrJJE0zuqXExpKlTBAIgmxzvVgRKw6Ny46fqG9KIj4nLjOjB-ljAg2W6oXuI0cqCnyI1s9AgrsQRY0iHEb5g08VHRGOVW0iXh30dhVPSLnLCcyiOPTdtwdEKkinVMq3kovK6x2Vh18D0OxW5Mmkis_2TtVZpYMUI9fX2O5On1dIcDKT-3nbj64A56WkBYyMkz_dXUaIAvDxPLjRwbrDUqjz6p4febEV8uKJtS0sA4"}
+                alt="Profile"
+                fill
+                style={{ objectFit: "cover" }}
+              />
+            </div>
             <div>
               <p style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "18px", fontWeight: 600, color: "#f0ede6", margin: "0 0 2px" }}>
                 {session.user?.name || "Spiritual Seeker"}
@@ -81,7 +75,16 @@ export default async function DashboardPage() {
           {/* Nav */}
           <nav style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "4px" }}>
             {navItems.map(item => (
-              <Link key={item.label} href={item.href} className="flex items-center justify-between p-2.5 px-3 rounded-xl no-underline transition-all text-[#c8c3b2]/65 hover:bg-gold/5 hover:text-[#f0ede6]">
+              <Link key={item.label} href={item.href} 
+                className="hover-menu-item"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "10px 12px", borderRadius: "10px",
+                  textDecoration: "none",
+                  color: "rgba(200,195,178,0.65)",
+                  border: "1px solid transparent",
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>{item.icon}</span>
                   <span style={{ fontSize: "12px", fontWeight: 500 }}>{item.label}</span>
@@ -120,7 +123,10 @@ export default async function DashboardPage() {
               { icon: "favorite_border", label: "Wishlist", value: activeIntentions, unit: "saved" },
               { icon: "stars", label: "Loyalty Points", value: ordersCount * 150, unit: "pts" },
             ].map(stat => (
-              <div key={stat.label} className="bg-[#161612] border border-gold/10 rounded-xl p-5 transition-all hover:-translate-y-[3px] hover:border-gold/20">
+              <div key={stat.label} style={{
+                background: "#161612", border: "1px solid rgba(212,169,74,0.1)",
+                borderRadius: "14px", padding: "20px",
+              }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
                   <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(212,169,74,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>{stat.icon}</span>
@@ -188,8 +194,16 @@ export default async function DashboardPage() {
               { icon: "favorite_border", label: "My Wishlist", sub: "Saved items", href: "/wishlist", color: "#f87171" },
               { icon: "support_agent", label: "Get Support", sub: "We're here to help", href: "mailto:support@akal.com", color: "#25e2f4" },
             ].map(action => (
-              <Link key={action.label} href={action.href} style={{ textDecoration: "none" }}>
-                <div className="bg-[#161612] border border-gold/10 rounded-2xl p-5 transition-all cursor-pointer hover:-translate-y-[3px] hover:border-gold/20">
+                <Link key={action.label} href={action.href} style={{ textDecoration: "none" }}>
+                  <div 
+                    className="hover-lift"
+                    style={{
+                      background: "#161612", border: "1px solid rgba(212,169,74,0.08)",
+                      borderRadius: "14px", padding: "20px",
+                      cursor: "pointer",
+                      height: "100%",
+                    }}
+                  >
                   <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: `${action.color}15`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "14px" }}>
                     <span className="material-symbols-outlined" style={{ fontSize: "20px", color: action.color }}>{action.icon}</span>
                   </div>

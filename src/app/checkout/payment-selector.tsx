@@ -3,13 +3,13 @@
 import { useState } from "react";
 
 const methods = [
-  { id: "stripe", icon: "credit_card", label: "Credit / Debit Card", sub: "Visa, Mastercard, Amex" },
-  { id: "upi", icon: "smartphone", label: "UPI Payment", sub: "GPay, PhonePe, BHIM" },
+  { id: "razorpay", icon: "credit_card", label: "Razorpay (Cards, UPI, Netbanking)", sub: "Secure payment gateway" },
+  { id: "upi", icon: "smartphone", label: "Direct UPI", sub: "GPay, PhonePe, BHIM" },
   { id: "cod", icon: "local_shipping", label: "Cash on Delivery", sub: "Pay when delivered" },
 ];
 
 export function PaymentSelector() {
-  const [selected, setSelected] = useState("stripe");
+  const [selected, setSelected] = useState("razorpay");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

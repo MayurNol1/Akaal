@@ -1,5 +1,4 @@
 import prisma from "@/lib/prisma";
-import { AddToCartInput, UpdateCartItemInput, RemoveCartItemInput } from "./validation";
 
 export class CartRepository {
   static async findByUserId(userId: string) {

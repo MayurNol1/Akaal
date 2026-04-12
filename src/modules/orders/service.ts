@@ -1,4 +1,5 @@
 import { OrderRepository } from "./repository";
+import { OrderStatus } from "@prisma/client";
 
 export async function getOrdersForUser(userId: string) {
   return OrderRepository.findManyByUserId(userId);
@@ -12,6 +13,6 @@ export async function getAllOrders() {
   return OrderRepository.findAll();
 }
 
-export async function updateOrderStatus(orderId: string, status: string) {
+export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   return OrderRepository.updateStatus(orderId, status);
 }

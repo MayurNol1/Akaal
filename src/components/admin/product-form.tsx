@@ -6,17 +6,7 @@ import { CreateProductSchema, type CreateProductInput } from "@/modules/products
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { 
-  Save, 
-  Image as ImageIcon, 
-  Info,
-  DollarSign,
-  Layers,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  Trash2
-} from "lucide-react";
+import { Save, Image as ImageIcon, Info, Layers, CheckCircle2, AlertCircle, Loader2, Trash2 } from "lucide-react";
 
 interface ProductFormProps {
   initialData?: {
@@ -175,8 +165,8 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
       {/* @ts-expect-error - Mismatch between React Hook Form and Zod Input Typings */}
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-16">
       <div className="lg:col-span-2 space-y-12">
-        <div className="glass border border-white/5 rounded-4xl p-10 space-y-10 relative overflow-hidden group">
-          <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-gold/10 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-1000" />
+        <div className="glass border border-white/5 rounded-[2rem] p-10 space-y-10 relative overflow-hidden group">
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-1000" />
           
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
             <div className="h-10 w-10 glass rounded-xl flex items-center justify-center border border-white/10 text-gold/60">
@@ -209,7 +199,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
                   >
                     <option value="">Select a Category...</option>
                     {categories.map(cat => (
-                      <option key={cat.id} value={cat.id} className="bg-background-dark text-white">
+                      <option key={cat.id} value={cat.id} style={{ background:"#10100e", color:"#fff" }}>
                         {cat.name}
                       </option>
                     ))}
@@ -281,8 +271,8 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
           </div>
         </div>
 
-        <div className="glass border border-white/5 rounded-4xl p-10 space-y-10 relative overflow-hidden group">
-          <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-gold/10 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-1000" />
+        <div className="glass border border-white/5 rounded-[2rem] p-10 space-y-10 relative overflow-hidden group">
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-1000" />
           
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
             <div className="h-10 w-10 glass rounded-xl flex items-center justify-center border border-white/10 text-gold/60">
@@ -296,9 +286,9 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Energy Required (USD)</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Price (₹)</label>
               <div className="relative group/price">
-                <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within/price:text-gold transition-colors" size={18} />
+                <span style={{ position:"absolute", left:"14px", top:"50%", transform:"translateY(-50%)", fontSize:"16px", color:"rgba(160,155,135,0.45)", fontFamily:"sans-serif" }}>₹</span>
                 <input 
                   {...register("price", { valueAsNumber: true })}
                   type="number"
@@ -325,7 +315,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
       </div>
 
       <div className="space-y-12">
-          <div className="glass border border-white/5 rounded-4xl p-10 space-y-10 sticky top-32">
+          <div className="glass border border-white/5 rounded-[2rem] p-10 space-y-10 sticky top-32">
             <div className="space-y-8">
               <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                 <div className="h-10 w-10 glass rounded-xl flex items-center justify-center border border-white/10 text-gold/60">
@@ -442,7 +432,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
                   disabled={isSubmitting}
                   className="w-full bg-white text-black py-5 rounded-2xl font-bold text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-gold transition-all duration-500 shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed group active:scale-95 overflow-hidden relative"
                 >
-                  <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-shimmer" />
                   {isSubmitting ? (
                     <Loader2 className="animate-spin" size={20} />
                   ) : (
@@ -467,7 +457,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
             </div>
 
             {(success || error) && (
-              <div className={`p-6 rounded-3xl border flex items-start gap-4 animate-in slide-in-from-top-4 duration-700 ${success ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-red-500/5 border-red-500/20 text-red-400'}`}>
+              <div style={{ padding:"20px", borderRadius:"16px", border:`1px solid ${success ? "rgba(72,187,120,0.25)" : "rgba(248,113,113,0.25)"}`, display:"flex", alignItems:"flex-start", gap:"12px", background:success ? "rgba(72,187,120,0.06)" : "rgba(248,113,113,0.06)", color:success ? "#48bb78" : "#f87171", animation:"fadeIn 0.3s ease-out" }}>
                 {success ? <CheckCircle2 size={20} className="shrink-0 mt-0.5" /> : <AlertCircle size={20} className="shrink-0 mt-0.5" />}
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{success ? "Divine Success" : "Disturbance Found"}</span>

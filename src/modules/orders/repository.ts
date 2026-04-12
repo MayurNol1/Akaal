@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { OrderWithItems } from "./types";
+import { OrderStatus } from "@prisma/client";
 
 export class OrderRepository {
   static async findManyByUserId(userId: string) {
@@ -46,10 +47,10 @@ export class OrderRepository {
     });
   }
 
-  static async updateStatus(orderId: string, status: string) {
+  static async updateStatus(orderId: string, status: OrderStatus) {
     return prisma.order.update({
       where: { id: orderId },
-      data: { status: status as any },
+      data: { status },
     });
   }
 }

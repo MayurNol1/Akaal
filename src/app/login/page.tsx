@@ -1,8 +1,9 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema, LoginInput, RegisterSchema, RegisterInput } from "@/modules/auth/validation";
+import { LoginSchema, LoginInput } from "@/modules/auth/validation";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -12,10 +13,7 @@ export default function LoginPage() {
   const { status } = useSession();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [regError, setRegError] = useState<string | null>(null);
-  const [regSuccess, setRegSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isRegLoading, setIsRegLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -23,17 +21,11 @@ export default function LoginPage() {
     if (status === "authenticated") router.push("/dashboard");
   }, [status, router]);
 
-  // Login Form
-  const { register: loginReg, handleSubmit: handleLoginSubmit, formState: { errors: loginErrors } } = useForm<LoginInput>({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
   });
 
-  // Register Form
-  const { register: registerReg, handleSubmit: handleRegisterSubmit, formState: { errors: registerErrors } } = useForm<RegisterInput>({
-    resolver: zodResolver(RegisterSchema),
-  });
-
-  const onLoginSubmit = async (data: LoginInput) => {
+  const onSubmit = async (data: LoginInput) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -52,41 +44,6 @@ export default function LoginPage() {
       setError("Connection interrupted. Please try again.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const onRegisterSubmit = async (data: RegisterInput) => {
-    setIsRegLoading(true);
-    setRegError(null);
-    try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        setRegError(result.message || "Registration failed. Please try again.");
-      } else {
-        setRegSuccess(true);
-        // Auto sign-in after registration
-        const loginResult = await signIn("credentials", {
-          email: data.email,
-          password: data.password,
-          redirect: false,
-        });
-        if (!loginResult?.error) {
-          router.push("/dashboard");
-          router.refresh();
-        } else {
-          setActiveTab("login");
-          setError("Account created! Please sign in.");
-        }
-      }
-    } catch {
-      setRegError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsRegLoading(false);
     }
   };
 
@@ -167,16 +124,17 @@ export default function LoginPage() {
     <div style={styles.bg}>
       {/* ── LEFT PANEL ── */}
       <div style={styles.leftPanel} className="hidden md:flex">
+        {/* BG */}
         <div style={{ position: "absolute", inset: 0, background: "#1c1c18", overflow: "hidden" }}>
+          {/* Gradient overlay */}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, rgba(16,16,14,0.1) 0%, rgba(16,16,14,0.7) 60%, rgba(16,16,14,0.95) 100%)", zIndex: 1 }} />
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 40% 40%, rgba(212,169,74,0.08) 0%, transparent 70%)" }} />
         </div>
 
+        {/* Content */}
         <div style={{ position: "relative", zIndex: 2 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "auto" }}>
-            <svg width="28" height="28" viewBox="0 0 48 48" fill="#d4a94a">
-              <path d="M8.578 8.578C5.528 11.628 3.451 15.515 2.61 19.745 1.768 23.976 2.2 28.361 3.85 32.346 5.501 36.331 8.297 39.738 11.883 42.134 15.47 44.53 19.686 45.81 24 45.81c4.313 0 8.53-1.28 12.117-3.676 3.586-2.396 6.382-5.803 8.033-9.788 1.65-3.985 2.082-8.37 1.241-12.601-.842-4.23-2.919-8.117-5.969-11.167L24 24 8.578 8.578Z"/>
-            </svg>
+            <Image src="/images/bg-removed-logo.png" alt="Akaal" width={28} height={28} style={{ objectFit: "contain" }} />
             <Link href="/" style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "22px", fontWeight: 600, letterSpacing: "0.04em", color: "#d4a94a", textDecoration: "none" }}>
               Akaal
             </Link>
@@ -230,28 +188,35 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <form onSubmit={handleLoginSubmit(onLoginSubmit)} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                   <label style={styles.label}>Email Address</label>
                   <div style={styles.inputWrap}>
                     <span className="material-symbols-outlined" style={styles.inputIcon}>mail</span>
-                    <input {...loginReg("email")} type="email" placeholder="priya@gmail.com" style={styles.input} />
+                    <input {...register("email")} type="email" placeholder="priya@gmail.com" style={styles.input}
+                      onFocus={e => { e.target.style.borderColor = "rgba(212,169,74,0.3)"; e.target.style.background = "rgba(212,169,74,0.04)"; }}
+                      onBlur={e => { e.target.style.borderColor = "rgba(212,169,74,0.1)"; e.target.style.background = "rgba(212,169,74,0.03)"; }}
+                    />
                   </div>
-                  {loginErrors.email && <p style={{ fontSize: "10px", color: "#f87171", marginTop: "3px" }}>{loginErrors.email.message}</p>}
+                  {errors.email && <p style={{ fontSize: "10px", color: "#f87171", marginTop: "3px" }}>{errors.email.message}</p>}
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                   <label style={styles.label}>Password</label>
                   <div style={{ ...styles.inputWrap }}>
                     <span className="material-symbols-outlined" style={styles.inputIcon}>lock</span>
-                    <input {...loginReg("password")} type={showPassword ? "text" : "password"} placeholder="Your password" style={{ ...styles.input, paddingRight: "40px" }} />
+                    <input {...register("password")} type={showPassword ? "text" : "password"} placeholder="Your password"
+                      style={{ ...styles.input, paddingRight: "40px" }}
+                      onFocus={e => { e.target.style.borderColor = "rgba(212,169,74,0.3)"; }}
+                      onBlur={e => { e.target.style.borderColor = "rgba(212,169,74,0.1)"; }}
+                    />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
                       style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer", color: "rgba(160,155,135,0.45)" }}
                     >
                       <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>{showPassword ? "visibility_off" : "visibility"}</span>
                     </button>
                   </div>
-                  {loginErrors.password && <p style={{ fontSize: "10px", color: "#f87171", marginTop: "3px" }}>{loginErrors.password.message}</p>}
+                  {errors.password && <p style={{ fontSize: "10px", color: "#f87171", marginTop: "3px" }}>{errors.password.message}</p>}
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "-4px" }}>
@@ -265,11 +230,15 @@ export default function LoginPage() {
                 </div>
 
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button type="button" style={styles.socialBtn}>
+                  <button type="button" onClick={() => signIn("google")} style={styles.socialBtn}>
                     <div style={{ width: "18px", height: "18px", borderRadius: "3px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <span style={{ color: "#4285f4", fontSize: "10px", fontWeight: 900 }}>G</span>
                     </div>
                     Google
+                  </button>
+                  <button type="button" onClick={() => signIn("apple")} style={styles.socialBtn}>
+                    <div style={{ width: "18px", height: "18px", borderRadius: "3px", background: "#000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px" }}>🍎</div>
+                    Apple
                   </button>
                 </div>
 
@@ -292,53 +261,54 @@ export default function LoginPage() {
               <p style={{ fontSize: "13px", color: "rgba(200,195,178,0.65)", marginBottom: "28px", lineHeight: 1.5 }}>
                 Create your account to track orders, save favourites, and access member discounts.
               </p>
-
-              {regError && (
-                <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "8px", padding: "12px 14px", fontSize: "12px", color: "#f87171", marginBottom: "16px" }}>
-                  {regError}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "14px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={styles.label}>First Name</label>
+                  <input type="text" placeholder="Priya" style={{ ...styles.input, paddingLeft: "14px" }} />
                 </div>
-              )}
-
-              {regSuccess ? (
-                <div style={{ textAlign: "center", padding: "20px" }}>
-                  <p style={{ color: "#d4a94a", fontWeight: 600 }}>Success! Redirecting you to sanctuary...</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={styles.label}>Last Name</label>
+                  <input type="text" placeholder="Sharma" style={{ ...styles.input, paddingLeft: "14px" }} />
                 </div>
-              ) : (
-                <form onSubmit={handleRegisterSubmit(onRegisterSubmit)} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                    <label style={styles.label}>Full Name</label>
-                    <div style={styles.inputWrap}>
-                      <span className="material-symbols-outlined" style={styles.inputIcon}>person</span>
-                      <input {...registerReg("name")} type="text" placeholder="Priya Sharma" style={styles.input} />
-                    </div>
-                    {registerErrors.name && <p style={{ fontSize: "10px", color: "#f87171" }}>{registerErrors.name.message}</p>}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={styles.label}>Email Address</label>
+                  <div style={styles.inputWrap}>
+                    <span className="material-symbols-outlined" style={styles.inputIcon}>mail</span>
+                    <input type="email" placeholder="priya@gmail.com" style={styles.input} />
                   </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                    <label style={styles.label}>Email Address</label>
-                    <div style={styles.inputWrap}>
-                      <span className="material-symbols-outlined" style={styles.inputIcon}>mail</span>
-                      <input {...registerReg("email")} type="email" placeholder="priya@gmail.com" style={styles.input} />
-                    </div>
-                    {registerErrors.email && <p style={{ fontSize: "10px", color: "#f87171" }}>{registerErrors.email.message}</p>}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={styles.label}>Phone Number</label>
+                  <div style={styles.inputWrap}>
+                    <span className="material-symbols-outlined" style={styles.inputIcon}>phone</span>
+                    <input type="tel" placeholder="+91 98765 43210" style={styles.input} />
                   </div>
+                </div>
+              </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                    <label style={styles.label}>Password</label>
-                    <div style={styles.inputWrap}>
-                      <span className="material-symbols-outlined" style={styles.inputIcon}>lock</span>
-                      <input {...registerReg("password")} type={showPassword ? "text" : "password"} placeholder="••••••••" style={styles.input} />
-                    </div>
-                    {registerErrors.password && <p style={{ fontSize: "10px", color: "#f87171" }}>{registerErrors.password.message}</p>}
+              <div style={styles.divider}>
+                <div style={styles.dividerLine} />
+                <span style={styles.dividerText}>or sign up with</span>
+                <div style={styles.dividerLine} />
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button type="button" onClick={() => signIn("google")} style={styles.socialBtn}>
+                  <div style={{ width: "18px", height: "18px", borderRadius: "3px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "#4285f4", fontSize: "10px", fontWeight: 900 }}>G</span>
                   </div>
-
-                  <button type="submit" disabled={isRegLoading} style={{ ...styles.btn, marginTop: "16px", opacity: isRegLoading ? 0.7 : 1 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>person_add</span>
-                    {isRegLoading ? "Creating Account…" : "Create Account"}
-                  </button>
-                </form>
-              )}
-
+                  Google
+                </button>
+                <button type="button" onClick={() => signIn("apple")} style={styles.socialBtn}>
+                  <div style={{ width: "18px", height: "18px", borderRadius: "3px", background: "#000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px" }}>🍎</div>
+                  Apple
+                </button>
+              </div>
+              <Link href="/register" style={{ ...styles.btn, marginTop: "16px", display: "flex", textDecoration: "none" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>person_add</span>
+                Create Account
+              </Link>
               <p style={styles.switchPrompt}>
                 Already have an account?{" "}
                 <span style={styles.switchLink} onClick={() => setActiveTab("login")}>Sign in</span>
@@ -348,6 +318,7 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* Footer */}
       <footer style={{ position: "fixed", bottom: 0, right: 0, padding: "16px 60px", fontSize: "11px", color: "rgba(160,155,135,0.45)", display: "flex", gap: "16px" }}>
         <Link href="#" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Privacy</Link>
         <Link href="#" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Terms</Link>

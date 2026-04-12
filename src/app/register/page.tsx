@@ -1,11 +1,12 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RegisterSchema, RegisterInput } from "@/modules/auth/validation";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -79,9 +80,7 @@ export default function RegisterPage() {
 
         <div style={{ position: "relative", zIndex: 2 }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-            <svg width="28" height="28" viewBox="0 0 48 48" fill="#d4a94a">
-              <path d="M8.578 8.578C5.528 11.628 3.451 15.515 2.61 19.745 1.768 23.976 2.2 28.361 3.85 32.346 5.501 36.331 8.297 39.738 11.883 42.134 15.47 44.53 19.686 45.81 24 45.81c4.313 0 8.53-1.28 12.117-3.676 3.586-2.396 6.382-5.803 8.033-9.788 1.65-3.985 2.082-8.37 1.241-12.601-.842-4.23-2.919-8.117-5.969-11.167L24 24 8.578 8.578Z" />
-            </svg>
+            <Image src="/images/bg-removed-logo.png" alt="Akaal" width={28} height={28} style={{ objectFit: "contain" }} />
             <span style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "22px", fontWeight: 600, letterSpacing: "0.04em", color: "#d4a94a" }}>Akaal</span>
           </Link>
         </div>
@@ -138,6 +137,37 @@ export default function RegisterPage() {
                   {error}
                 </div>
               )}
+
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" }}>
+                <div style={{ flex: 1, height: "1px", background: "rgba(212,169,74,0.1)" }} />
+                <span style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>or continue with</span>
+                <div style={{ flex: 1, height: "1px", background: "rgba(212,169,74,0.1)" }} />
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+                <button type="button" onClick={() => signIn("google")} style={{
+                  flex: 1, padding: "10px", border: "1px solid rgba(212,169,74,0.1)",
+                  borderRadius: "9px", background: "rgba(212,169,74,0.025)",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  gap: "8px", fontSize: "12px", fontWeight: 600, color: "rgba(200,195,178,0.65)",
+                  transition: "all .18s",
+                }}>
+                  <div style={{ width: "18px", height: "18px", borderRadius: "3px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "#4285f4", fontSize: "10px", fontWeight: 900 }}>G</span>
+                  </div>
+                  Google
+                </button>
+                <button type="button" onClick={() => signIn("apple")} style={{
+                  flex: 1, padding: "10px", border: "1px solid rgba(212,169,74,0.1)",
+                  borderRadius: "9px", background: "rgba(212,169,74,0.025)",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  gap: "8px", fontSize: "12px", fontWeight: 600, color: "rgba(200,195,178,0.65)",
+                  transition: "all .18s",
+                }}>
+                  <div style={{ width: "18px", height: "18px", borderRadius: "3px", background: "#000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px" }}>🍎</div>
+                  Apple
+                </button>
+              </div>
 
               <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>

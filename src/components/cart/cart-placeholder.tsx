@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
-export function CartPlaceholder({ className = "" }: { className?: string }) {
+export function CartPlaceholder() {
   const [count, setCount] = useState(0);
   const pathname = usePathname();
 
@@ -34,7 +34,7 @@ export function CartPlaceholder({ className = "" }: { className?: string }) {
 
   return (
     <div 
-      className={`absolute top-0 right-0 bg-primary text-background-dark text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center transform translate-x-1/2 -translate-y-1/2 ${className}`}
+      style={{ position:"absolute", top:0, right:0, background:"#d4a94a", color:"#10100e", fontSize:"10px", fontWeight:700, height:"16px", width:"16px", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", transform:"translate(50%,-50%)" }}
     >
       {count > 99 ? '99+' : count}
     </div>

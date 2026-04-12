@@ -273,10 +273,17 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
             </h2>
             <Link href="/products" style={{ fontSize: "12px", color: "#d4a94a", textDecoration: "none", fontWeight: 600 }}>View All</Link>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
-            {relatedProducts.slice(0, 4).map((rp) => (
-              <Link key={rp.id} href={`/products/${rp.id}`} style={{ textDecoration: "none" }}>
-                <div className="bg-[#161612] border border-gold/10 rounded-xl overflow-hidden transition-all hover:-translate-y-[3px] hover:border-gold/20">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+              {relatedProducts.slice(0, 4).map((rp) => (
+                <Link key={rp.id} href={`/products/${rp.id}`} style={{ textDecoration: "none" }}>
+                  <div 
+                    className="hover-lift"
+                    style={{
+                      background: "#161612", border: "1px solid rgba(212,169,74,0.1)",
+                      borderRadius: "120px 12px 12px 12px", overflow: "hidden", // Added some style to match the premium feel
+                      height: "100%",
+                    }}
+                  >
                   <div style={{ aspectRatio: "1 / 1", position: "relative", background: "#1c1c18" }}>
                     <Image src={rp.imageUrl || ""} alt={rp.name} fill style={{ objectFit: "cover" }} />
                   </div>

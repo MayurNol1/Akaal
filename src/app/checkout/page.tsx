@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { CartService } from "@/modules/cart/service";
-import { PaymentSelector } from "./payment-selector";
+import RazorpayButton from "@/components/checkout/razorpay-button";
 
 export const dynamic = "force-dynamic";
 
@@ -123,7 +123,22 @@ export default async function CheckoutPage() {
                 <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: 600, color: "#f0ede6", marginBottom: "16px" }}>
                   Payment <em style={{ color: "#d4a94a" }}>Method</em>
                 </h2>
-                <PaymentSelector />
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {[
+                    { id: "stripe", icon: "credit_card", label: "Credit / Debit Card", sub: "Visa, Mastercard, Amex" },
+                    { id: "upi", icon: "smartphone", label: "UPI Payment", sub: "GPay, PhonePe, BHIM" },
+                    { id: "cod", icon: "local_shipping", label: "Cash on Delivery", sub: "Pay when delivered" },
+                  ].map((method, i) => (
+                    <label key={method.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px", borderRadius: "10px", border: `1px solid ${i === 0 ? "#d4a94a" : "rgba(212,169,74,0.1)"}`, background: i === 0 ? "rgba(212,169,74,0.05)" : "transparent", cursor: "pointer" }}>
+                      <input type="radio" name="payment" defaultChecked={i === 0} style={{ accentColor: "#d4a94a" }} />
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>{method.icon}</span>
+                      <div>
+                        <p style={{ fontSize: "13px", fontWeight: 600, color: "#f0ede6", margin: 0 }}>{method.label}</p>
+                        <p style={{ fontSize: "10px", color: "rgba(160,155,135,0.45)", margin: 0 }}>{method.sub}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               {/* Trust badges */}
@@ -180,22 +195,10 @@ export default async function CheckoutPage() {
                 </div>
 
                 {/* CTA */}
-                <form action="/api/checkout" method="POST">
-                  <button type="submit" style={{
-                    width: "100%", padding: "14px",
-                    background: "#d4a94a", color: "#10100e",
-                    fontSize: "13px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
-                    border: "none", borderRadius: "10px", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                    boxSizing: "border-box",
-                  }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>lock</span>
-                    Place Order — ₹{total.toFixed(0)}
-                  </button>
-                </form>
+                <RazorpayButton total={total} cartId={cart?.id || ""} />
 
                 <p style={{ textAlign: "center", fontSize: "11px", color: "rgba(160,155,135,0.45)", marginTop: "10px" }}>
-                  🔒 Secured by Stripe
+                  🔒 Secured by Razorpay
                 </p>
 
                 <div style={{ marginTop: "16px", padding: "14px", borderRadius: "10px", background: "rgba(212,169,74,0.03)", border: "1px solid rgba(212,169,74,0.08)", fontSize: "12px", color: "rgba(200,195,178,0.65)", fontStyle: "italic", textAlign: "center", lineHeight: 1.5 }}>

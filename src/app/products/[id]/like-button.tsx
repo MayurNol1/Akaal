@@ -9,6 +9,7 @@ export function LikeButton({ productId }: { productId: string }) {
   useEffect(() => {
     // Standard LocalStorage Persistence for MVP liking system
     const isLiked = localStorage.getItem(`liked_${productId}`) === "true";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLiked(isLiked);
   }, [productId]);
 

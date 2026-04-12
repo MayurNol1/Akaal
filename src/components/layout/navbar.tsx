@@ -199,16 +199,11 @@ export function Navbar() {
                   overflow: "hidden", cursor: "pointer", position: "relative",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "border-color 0.2s",
-                  background: "rgba(212,169,74,0.05)",
                 }}>
-                  {session.user?.image ? (
-                    <Image
-                      src={session.user.image}
-                      alt="Profile" fill className="object-cover"
-                    />
-                  ) : (
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>person</span>
-                  )}
+                  <Image
+                    src={session.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDb9HxOmlluH2qUdJkJzGw0kBx49GCM0HpWK5hrJJE0zuqXExpKlTBAIgmxzvVgRKw6Ny46fqG9KIj4nLjOjB-ljAg2W6oXuI0cqCnyI1s9AgrsQRY0iHEb5g08VHRGOVW0iXh30dhVPSLnLCcyiOPTdtwdEKkinVMq3kovK6x2Vh18D0OxW5Mmkis_2TtVZpYMUI9fX2O5On1dIcDKT-3nbj64A56WkBYyMkz_dXUaIAvDxPLjRwbrDUqjz6p4febEV8uKJtS0sA4"}
+                    alt="Profile" fill className="object-cover"
+                  />
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}

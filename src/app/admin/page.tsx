@@ -152,7 +152,7 @@ export default async function AdminDashboardPage() {
           ].map(action => (
             <Link key={action.href} href={action.href} style={{ textDecoration: "none" }}>
               <div 
-                className="transition-all duration-180 hover:border-gold/20 hover:-translate-y-[2px]"
+                className="hover-lift"
                 style={{
                   ...cardStyle, padding: "16px", display: "flex", alignItems: "center", gap: "12px",
                   cursor: "pointer",
@@ -198,9 +198,10 @@ export default async function AdminDashboardPage() {
                 const statusBg = p.stock === 0 ? "rgba(248,113,113,0.08)" : p.stock <= 10 ? "rgba(255,153,51,0.08)" : "rgba(37,226,244,0.08)";
 
                 return (
-                  <tr key={p.id} 
-                    className="border-b border-gold/5 transition-colors hover:bg-gold/5"
-                    style={{ transition: "background 0.15s" }}
+                  <tr 
+                    key={p.id} 
+                    className="hover-bg-gold-low"
+                    style={{ borderBottom: "1px solid rgba(212,169,74,0.04)" }}
                   >
                     <td style={{ padding: "12px 16px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

@@ -1,101 +1,126 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { Save, Shield, Bell } from "lucide-react";
 import { useState } from "react";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
   const [isSaved, setIsSaved] = useState(false);
+  const [notifications, setNotifications] = useState(false);
+  const [privacy, setPrivacy] = useState(true);
 
   const handleSave = () => {
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%", background: "rgba(212,169,74,0.03)",
+    border: "1px solid rgba(212,169,74,0.12)", borderRadius: "9px",
+    padding: "11px 14px", fontSize: "13px", color: "#f0ede6",
+    outline: "none", fontFamily: "var(--font-sans)", transition: "border-color 0.2s",
+    boxSizing: "border-box",
+  };
+
   return (
-    <div className="min-h-screen bg-background-dark text-white pt-32 pb-20 px-6">
-      <div className="max-w-3xl mx-auto space-y-12 animate-fade-in text-left">
-        {isSaved && (
-          <div className="fixed top-24 right-8 z-50 animate-in slide-in-from-right-5 fade-in duration-500">
-             <div className="bg-primary/10 backdrop-blur-3xl border border-primary/20 px-8 py-4 rounded-2xl flex items-center gap-4 shadow-2xl">
-                <Save className="text-primary" size={20} />
-                <div>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-primary leading-none mb-1">Ritual Sealed</p>
-                   <p className="text-xs text-white">Your cosmic configurations have been locked.</p>
+    <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px", paddingBottom: "80px" }}>
+
+      {isSaved && (
+        <div style={{ position: "fixed", top: "84px", right: "20px", zIndex: 50, background: "rgba(16,16,14,0.97)", border: "1px solid rgba(212,169,74,0.28)", borderRadius: "12px", padding: "14px 18px", display: "flex", alignItems: "center", gap: "12px", boxShadow: "0 12px 40px rgba(0,0,0,0.5)", backdropFilter: "blur(16px)", animation: "fadeIn 0.25s ease-out" }}>
+          <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "#d4a94a", fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+          <div>
+            <p style={{ fontSize: "11px", fontWeight: 700, color: "#d4a94a", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 2px" }}>Settings Saved</p>
+            <p style={{ fontSize: "12px", color: "rgba(200,195,178,0.75)", margin: 0 }}>Your preferences have been updated.</p>
+          </div>
+        </div>
+      )}
+
+      <div style={{ maxWidth: "720px", margin: "0 auto", padding: "48px clamp(16px,4vw,48px) 0" }}>
+        <div style={{ marginBottom: "40px" }}>
+          <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#d4a94a", marginBottom: "8px" }}>Account</p>
+          <h1 style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "clamp(28px,4vw,40px)", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
+            Sanctuary <em style={{ color: "#d4a94a" }}>Settings</em>
+          </h1>
+        </div>
+
+        {/* Profile */}
+        <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "16px", padding: "24px", marginBottom: "16px" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: 600, color: "#f0ede6", margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>person</span>
+            Profile Information
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(160,155,135,0.45)" }}>Display Name</label>
+              <input type="text" defaultValue={session?.user?.name || ""} placeholder="Your name" style={inputStyle}
+                onFocus={e => { e.target.style.borderColor = "rgba(212,169,74,0.35)"; }}
+                onBlur={e => { e.target.style.borderColor = "rgba(212,169,74,0.12)"; }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(160,155,135,0.45)" }}>Email Address</label>
+              <input type="email" disabled defaultValue={session?.user?.email || ""} style={{ ...inputStyle, background: "#10100e", borderColor: "rgba(255,255,255,0.05)", color: "rgba(160,155,135,0.4)", cursor: "not-allowed" }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Preferences */}
+        <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "16px", padding: "24px", marginBottom: "16px" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: 600, color: "#f0ede6", margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>tune</span>
+            Preferences
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {[
+              { icon: "notifications", label: "Email Notifications", desc: "Receive updates about orders, new arrivals, and sacred mantras.", value: notifications, set: setNotifications },
+              { icon: "shield", label: "Privacy Mode", desc: "Keep your wishlist and activity history private.", value: privacy, set: setPrivacy },
+            ].map(item => (
+              <div key={item.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px", background: "rgba(212,169,74,0.02)", border: "1px solid rgba(212,169,74,0.07)", borderRadius: "10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "9px", background: "rgba(212,169,74,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>{item.icon}</span>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#f0ede6", margin: "0 0 3px" }}>{item.label}</p>
+                    <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", margin: 0 }}>{item.desc}</p>
+                  </div>
                 </div>
-             </div>
+                <button onClick={() => item.set(!item.value)} style={{ width: "44px", height: "24px", borderRadius: "99px", flexShrink: 0, background: item.value ? "#d4a94a" : "rgba(255,255,255,0.08)", border: "none", cursor: "pointer", position: "relative", transition: "background 0.25s", boxShadow: item.value ? "0 0 12px rgba(212,169,74,0.3)" : "none" }}>
+                  <span style={{ position: "absolute", top: "3px", left: item.value ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.25s", boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }} />
+                </button>
+              </div>
+            ))}
           </div>
-        )}
-        <header className="space-y-4 border-b border-white/5 pb-10">
-           <div className="h-px w-12 bg-primary/50" />
-           <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-600">Vessel Configuration</p>
-           <h1 className="text-5xl font-serif font-black italic text-white tracking-tight">
-             Sanctuary <span className="text-primary not-italic">Settings</span>
-           </h1>
-        </header>
-
-        <div className="space-y-6">
-           <div className="flex flex-col gap-6 md:flex-row p-8 rounded-[32px] bg-white/2 border border-white/5 shadow-2xl">
-             <div className="w-full space-y-4">
-                <label className="text-[10px] uppercase tracking-[0.3em] font-black text-zinc-500">True Name (Display Identity)</label>
-                <input type="text" defaultValue={session?.user?.name || ''} className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-primary/40 focus:bg-white/10 transition-all font-serif italic text-lg" />
-             </div>
-             <div className="w-full space-y-4">
-                <label className="text-[10px] uppercase tracking-[0.3em] font-black text-zinc-500">Celestial Origin (Email)</label>
-                <input type="email" disabled defaultValue={session?.user?.email || ''} className="w-full px-6 py-4 bg-background-dark border border-white/5 rounded-2xl text-zinc-400 opacity-60 cursor-not-allowed outline-none font-sans" />
-             </div>
-           </div>
-
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-              <SettingRow 
-                icon={<Shield size={20} />} 
-                title="Spiritual Boundaries" 
-                desc="Configure your privacy settings and energy limits." 
-                defaultEnabled={true} 
-              />
-              <SettingRow 
-                icon={<Bell size={20} />} 
-                title="Cosmic Resonance" 
-                desc="Manage notifications about new artifacts and sanctuary updates." 
-                defaultEnabled={false} 
-              />
-           </div>
         </div>
 
-        <div className="pt-10 flex border-t border-white/5">
-           <button 
-             onClick={handleSave}
-             className="flex items-center gap-3 bg-white/5 text-zinc-500 hover:text-primary border border-white/5 px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary/5 hover:border-primary/20 transition-all duration-500"
-           >
-             Lock Configuration <Save size={16} />
-           </button>
+        {/* Security */}
+        <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "16px", padding: "24px", marginBottom: "24px" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: 600, color: "#f0ede6", margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>lock</span>
+            Security
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(160,155,135,0.45)" }}>New Password</label>
+              <input type="password" placeholder="Enter new password" style={inputStyle}
+                onFocus={e => { e.target.style.borderColor = "rgba(212,169,74,0.35)"; }}
+                onBlur={e => { e.target.style.borderColor = "rgba(212,169,74,0.12)"; }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(160,155,135,0.45)" }}>Confirm Password</label>
+              <input type="password" placeholder="Repeat new password" style={inputStyle}
+                onFocus={e => { e.target.style.borderColor = "rgba(212,169,74,0.35)"; }}
+                onBlur={e => { e.target.style.borderColor = "rgba(212,169,74,0.12)"; }} />
+            </div>
+          </div>
         </div>
+
+        <button onClick={handleSave} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#d4a94a", color: "#10100e", padding: "13px 32px", borderRadius: "10px", fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", cursor: "pointer", transition: "background 0.2s, box-shadow 0.2s", boxShadow: "0 4px 16px rgba(212,169,74,0.2)" }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#e8c06c"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#d4a94a"; }}>
+          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>save</span>
+          Save Settings
+        </button>
       </div>
-    </div>
-  );
-}
-
-function SettingRow({ icon, title, desc, defaultEnabled }: { icon: React.ReactNode, title: string, desc: string, defaultEnabled: boolean }) {
-  const [enabled, setEnabled] = useState(defaultEnabled);
-
-  return (
-    <div className="p-8 rounded-[32px] bg-white/2 border border-white/5 space-y-6 group hover:border-primary/10 transition-all">
-       <div className="flex items-center justify-between">
-          <div className="size-12 rounded-2xl bg-white/5 flex items-center justify-center text-zinc-500 group-hover:text-primary transition-colors">
-             {icon}
-          </div>
-          <button 
-            onClick={() => setEnabled(!enabled)}
-            className={`w-14 h-8 rounded-full transition-all duration-500 relative ${enabled ? 'bg-primary shadow-[0_0_15px_rgba(236,149,19,0.3)]' : 'bg-zinc-800'}`}
-          >
-             <div className={`absolute top-1 size-6 rounded-full bg-white transition-all duration-500 shadow-xl ${enabled ? 'left-7' : 'left-1'}`} />
-          </button>
-       </div>
-       <div className="space-y-2">
-          <h4 className="text-sm font-bold uppercase tracking-widest text-white">{title}</h4>
-          <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">{desc}</p>
-       </div>
     </div>
   );
 }

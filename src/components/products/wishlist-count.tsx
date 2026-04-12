@@ -17,6 +17,7 @@ export function WishlistCount() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     updateCount();
 
     // Listen to our custom event for clicks across the app

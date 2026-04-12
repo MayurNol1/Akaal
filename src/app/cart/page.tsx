@@ -62,18 +62,17 @@ export default async function CartPage() {
   const total = subtotal + shipping + tax;
 
   return (
-    <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh" }}>
+    <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px" }}>
 
       {/* Promo Bar */}
       <div style={{
-        paddingTop: "72px",
         background: "#1c1c15",
         padding: "14px 60px",
         textAlign: "center", fontSize: "12px",
         color: "rgba(200,195,178,0.65)",
         borderBottom: "1px solid rgba(212,169,74,0.1)",
       }}>
-        <div style={{ paddingTop: "72px" }}>
+        <div>
           <span className="material-symbols-outlined" style={{ fontSize: "14px", verticalAlign: "middle", color: "#d4a94a", marginRight: "6px" }}>local_shipping</span>
           Free shipping on orders above ₹{freeShippingThreshold}.{subtotal < freeShippingThreshold
             ? ` Add ₹${(freeShippingThreshold - subtotal).toFixed(0)} more to qualify!`

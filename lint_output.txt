@@ -1,0 +1,134 @@
+
+> akaal@0.1.0 lint
+> eslint
+
+
+C:\Users\mayur\OneDrive\Desktop\Akal\prisma\seed.ts
+  104:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\admin\orders\page.tsx
+  16:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\admin\products\edit\[id]\page.tsx
+  1:21  warning  'Sparkles' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\admin\products\page.tsx
+   4:61  warning  'Sparkles' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   6:31  warning  'useMemo' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  28:12  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\admin\products\page.tsx:28:12
+  26 |   useEffect(() => {
+  27 |     const q = searchParams.get("search");
+> 28 |     if (q) setSearch(q);
+     |            ^^^^^^^^^ Avoid calling setState() directly within an effect
+  29 |   }, [searchParams]);
+  30 |
+  31 |   const filteredProducts = products.filter(p =>   react-hooks/set-state-in-effect
+  56:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\admin\products\page.tsx:56:5
+  54 |
+  55 |   useEffect(() => {
+> 56 |     fetchProducts();
+     |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  57 |   }, []);
+  58 |
+  59 |   const handleDelete = async (id: string, name: string) => {                                                    react-hooks/set-state-in-effect
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\api\checkout\route.ts
+  8:70  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\api\webhooks\stripe\route.ts
+  9:70  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\layout.tsx
+  63:9  warning  Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  @next/next/no-page-custom-font
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\products\[id]\like-button.tsx
+  12:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\app\products\[id]\like-button.tsx:12:5
+  10 |     // Standard LocalStorage Persistence for MVP liking system
+  11 |     const isLiked = localStorage.getItem(`liked_${productId}`) === "true";
+> 12 |     setLiked(isLiked);
+     |     ^^^^^^^^ Avoid calling setState() directly within an effect
+  13 |   }, [productId]);
+  14 |
+  15 |   const toggleLike = () => {  react-hooks/set-state-in-effect
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\components\admin\users-client.tsx
+   3:76  warning  'Loader2' is defined but never used            @typescript-eslint/no-unused-vars
+  15:17  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  20:17  warning  'setUsers' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\components\cart\cart-placeholder.tsx
+  6:35  warning  'className' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\components\products\like-button.tsx
+  16:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\components\products\like-button.tsx:16:5
+  14 |   useEffect(() => {
+  15 |     const isLiked = localStorage.getItem(`liked_${productId}`) === "true";
+> 16 |     setLiked(isLiked);
+     |     ^^^^^^^^ Avoid calling setState() directly within an effect
+  17 |   }, [productId]);
+  18 |
+  19 |   const toggleLike = (e: React.MouseEvent) => {  react-hooks/set-state-in-effect
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\components\products\wishlist-count.tsx
+  20:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\components\products\wishlist-count.tsx:20:5
+  18 |
+  19 |   useEffect(() => {
+> 20 |     updateCount();
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  21 |
+  22 |     // Listen to our custom event for clicks across the app
+  23 |     window.addEventListener("wishlist-updated", updateCount);  react-hooks/set-state-in-effect
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\modules\auth\repository.ts
+  15:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\modules\cart\repository.ts
+  2:10  warning  'AddToCartInput' is defined but never used       @typescript-eslint/no-unused-vars
+  2:26  warning  'UpdateCartItemInput' is defined but never used  @typescript-eslint/no-unused-vars
+  2:47  warning  'RemoveCartItemInput' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mayur\OneDrive\Desktop\Akal\src\modules\orders\repository.ts
+  52:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 22 problems (12 errors, 10 warnings)
+

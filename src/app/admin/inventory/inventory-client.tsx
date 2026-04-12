@@ -107,7 +107,8 @@ export function InventoryClient({
         body: JSON.stringify(body),
       });
       if (!response.ok) return;
-      const updated = (await response.json()) as { id: string; stock: number; isActive: boolean };
+      const raw = await response.json();
+      const updated = (raw.data ?? raw) as { id: string; stock: number; isActive: boolean };
       setProducts((prev) =>
         prev.map((p) =>
           p.id === id

@@ -1,152 +1,118 @@
-import { Package, Clock, CheckCircle2, Truck, Search, Filter } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
+
+const STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
+  Processing: { label: "Processing", color: "#ff9933",  bg: "rgba(255,153,51,0.08)",  border: "rgba(255,153,51,0.22)",  icon: "schedule" },
+  Shipped:    { label: "Shipped",    color: "#bb86fc",  bg: "rgba(187,134,252,0.08)", border: "rgba(187,134,252,0.22)", icon: "local_shipping" },
+  Delivered:  { label: "Delivered",  color: "#25e2f4",  bg: "rgba(37,226,244,0.08)",  border: "rgba(37,226,244,0.22)",  icon: "check_circle" },
+  Paid:       { label: "Paid",       color: "#d4a94a",  bg: "rgba(212,169,74,0.08)",  border: "rgba(212,169,74,0.22)",  icon: "payments" },
+  Cancelled:  { label: "Cancelled",  color: "#f87171",  bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.22)", icon: "cancel" },
+};
 
 export default async function AdminOrdersPage() {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") return null;
 
   const ordersDb = await prisma.order.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: {
-      user: true,
-      items: {
-        include: { product: true }
-      }
-    }
+    orderBy: { createdAt: "desc" },
+    include: { user: true, items: { include: { product: true } } },
   });
 
-  const orders = ordersDb.map(val => ({
+  const orders = ordersDb.map((val) => ({
     id: val.id,
-    user: val.user.name || "Unknown Seeker",
+    user: val.user.name || "Unknown",
     email: val.user.email,
-    items: val.items.map(i => i.product.name).join(", "),
-    price: `₹${parseFloat(val.total.toString()).toLocaleString()}`,
-    status: val.status === 'PENDING' ? 'Processing' : 
-            val.status === 'SHIPPED' ? 'Shipped' :
-            val.status === 'DELIVERED' ? 'Delivered' : 'Paid',
+    items: val.items.map((i) => i.product.name).join(", "),
+    price: `₹${parseFloat(val.total.toString()).toLocaleString("en-IN")}`,
+    date: val.createdAt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+    status:
+      val.status === "PENDING"   ? "Processing" :
+      val.status === "SHIPPED"   ? "Shipped"    :
+      val.status === "DELIVERED" ? "Delivered"  :
+      val.status === "PAID"      ? "Paid"       : "Cancelled",
   }));
 
-  return (
-    <div className="space-y-12 animate-fade-in relative z-10">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
-        <div className="space-y-4">
-           <div className="h-px w-12 bg-primary/50" />
-           <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-600">Sacred Manifestation Logs</p>
-           <h1 className="text-5xl font-serif italic text-white tracking-tight">Order <span className="text-primary not-italic">Registry</span></h1>
-        </div>
-        <div className="flex gap-4">
-           <div className="bg-white/5 px-6 py-4 rounded-xl border border-white/5 flex items-center gap-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-              <Clock size={16} className="text-primary" />
-              {orders.filter(o => o.status === 'Processing').length} Pending Rituals
-           </div>
-        </div>
-      </header>
+  const pending = orders.filter((o) => o.status === "Processing").length;
 
-      {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-6 items-center">
-        <div className="relative flex-1 group w-full">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600 group-hover:text-primary transition-colors duration-500" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search manifests by Seeker name or Order ID..."
-            className="w-full bg-white/2 border border-white/5 rounded-[20px] py-4 pl-14 pr-6 focus:outline-none focus:border-primary/30 transition-all text-xs font-medium placeholder:text-zinc-800"
-          />
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", paddingBottom: "24px", borderBottom: "1px solid rgba(212,169,74,0.08)" }}>
+        <div>
+          <div style={{ width: "40px", height: "2px", background: "#d4a94a", borderRadius: "99px", marginBottom: "12px" }} />
+          <p style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(160,155,135,0.45)", marginBottom: "6px", margin: "0 0 6px" }}>Order Registry</p>
+          <h1 style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "clamp(26px,3vw,36px)", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
+            Orders <em style={{ color: "#d4a94a" }}>Management</em>
+          </h1>
         </div>
-        <div className="bg-white/2 px-6 py-4 rounded-[20px] border border-white/5 flex items-center gap-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest cursor-pointer hover:border-white/10 transition-colors w-full md:w-auto whitespace-nowrap">
-           <Filter size={16} />
-           Status: All Cycles
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ padding: "10px 16px", borderRadius: "10px", background: "rgba(255,153,51,0.08)", border: "1px solid rgba(255,153,51,0.18)", display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#ff9933", fontWeight: 600 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>schedule</span>
+            {pending} Pending
+          </div>
+          <div style={{ padding: "10px 16px", borderRadius: "10px", background: "rgba(212,169,74,0.08)", border: "1px solid rgba(212,169,74,0.18)", display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#d4a94a", fontWeight: 600 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>receipt_long</span>
+            {orders.length} Total
+          </div>
         </div>
       </div>
 
-      {/* Orders Table from Stitch */}
-      <div className="bg-white/2 border border-white/5 rounded-[40px] overflow-hidden shadow-2xl transition-all duration-700 hover:border-primary/5">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-white/1 border-b border-white/5 text-left text-[9px] uppercase tracking-[0.4em] text-zinc-600">
-              <th className="px-10 py-6 font-bold">Manifest ID</th>
-              <th className="px-10 py-6 font-bold">Seeker Details</th>
-              <th className="px-10 py-6 font-bold">Artifacts</th>
-              <th className="px-10 py-6 font-bold text-right">Ritual Value</th>
-              <th className="px-10 py-6 font-bold text-center">Current State</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {orders.map((order) => (
-              <OrderRow 
-                key={order.id}
-                id={order.id} 
-                user={order.user} 
-                email={order.email} 
-                items={order.items} 
-                price={order.price} 
-                status={order.status} 
-                icon={order.status === "Processing" ? <Clock size={14} /> : order.status === "Shipped" ? <Truck size={14} /> : <CheckCircle2 size={14} />} 
-                statusClass={
-                  order.status === "Processing" ? "bg-primary/5 text-primary border-primary/20 shadow-[0_0_12px_rgba(236,149,19,0.1)]" :
-                  order.status === "Shipped" ? "bg-blue-500/5 text-blue-400 border-blue-500/20 shadow-[0_0_12px_rgba(59,130,246,0.1)]" :
-                  "bg-emerald-500/5 text-emerald-400 border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
-                }
-              />
-            ))}
-          </tbody>
-        </table>
-        
-        {orders.length === 0 && (
-          <div className="p-32 flex flex-col items-center justify-center text-center space-y-6 bg-black/40">
-            <Package size={64} className="text-zinc-800" strokeWidth={1} />
-            <div className="space-y-1">
-              <p className="text-zinc-500 font-serif italic text-xl tracking-widest text-white">The registry is silent.</p>
-              <p className="text-[10px] text-zinc-700 font-black uppercase tracking-[0.4em]">Waiting for first manifestation</p>
-            </div>
-          </div>
-        )}
+      {/* Table */}
+      <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "16px", overflow: "hidden" }}>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(212,169,74,0.08)", background: "rgba(212,169,74,0.02)" }}>
+                {["Order ID", "Customer", "Items", "Amount", "Date", "Status"].map((h) => (
+                  <th key={h} style={{ padding: "14px 16px", textAlign: "left", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(160,155,135,0.4)", whiteSpace: "nowrap" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {orders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: "64px 24px", textAlign: "center" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "48px", color: "rgba(212,169,74,0.12)" }}>receipt_long</span>
+                      <p style={{ fontFamily: "var(--font-serif)", fontSize: "18px", color: "rgba(200,195,178,0.45)", fontStyle: "italic", margin: 0 }}>No orders yet</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                orders.map((order) => {
+                  const st = STATUS_MAP[order.status] || STATUS_MAP.Processing;
+                  return (
+                    <tr 
+                      key={order.id}
+                      className="hover-bg-gold-low"
+                      style={{ borderBottom: "1px solid rgba(212,169,74,0.04)" }}
+                    >
+                      <td style={{ padding: "14px 16px", fontFamily: "monospace", fontSize: "11px", color: "#d4a94a" }}>
+                        #{order.id.slice(0, 8).toUpperCase()}
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <p style={{ fontFamily: "var(--font-serif)", fontSize: "13px", fontWeight: 600, color: "#f0ede6", margin: "0 0 2px" }}>{order.user}</p>
+                        <p style={{ fontSize: "10px", color: "rgba(160,155,135,0.4)", margin: 0 }}>{order.email}</p>
+                      </td>
+                      <td style={{ padding: "14px 16px", color: "rgba(200,195,178,0.65)", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.items || "—"}</td>
+                      <td style={{ padding: "14px 16px", fontFamily: "var(--font-serif)", fontSize: "15px", fontWeight: 700, color: "#f0ede6", whiteSpace: "nowrap" }}>{order.price}</td>
+                      <td style={{ padding: "14px 16px", color: "rgba(160,155,135,0.4)", whiteSpace: "nowrap", fontSize: "11px" }}>{order.date}</td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 10px", borderRadius: "99px", fontSize: "10px", fontWeight: 700, color: st.color, background: st.bg, border: `1px solid ${st.border}`, whiteSpace: "nowrap" }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: "12px", fontVariationSettings: "'FILL' 1" }}>{st.icon}</span>
+                          {st.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  );
-}
-
-function OrderRow({ id, user, email, items, price, status, icon, statusClass }: {
-  id: string,
-  user: string,
-  email: string,
-  items: string,
-  price: string,
-  status: string,
-  icon: React.ReactNode,
-  statusClass: string
-}) {
-  return (
-    <tr className="hover:bg-white/3 transition-all duration-500 group">
-      <td className="px-10 py-8">
-        <p className="text-[10px] font-mono text-zinc-500 font-black uppercase tracking-widest italic group-hover:text-primary transition-colors">#{id}</p>
-      </td>
-      <td className="px-10 py-8">
-        <div className="space-y-1">
-          <p className="font-serif font-black text-white italic group-hover:text-primary transition-colors">{user}</p>
-          <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">{email}</p>
-        </div>
-      </td>
-      <td className="px-10 py-8">
-        <p className="text-[11px] font-serif font-bold italic text-zinc-400 max-w-[200px] truncate group-hover:text-white transition-colors">
-          {items}
-        </p>
-      </td>
-      <td className="px-10 py-8 text-right">
-        <p className="text-xl font-serif font-black text-white italic tracking-widest group-hover:text-primary transition-colors duration-500">
-          {price}
-        </p>
-      </td>
-      <td className="px-10 py-8">
-        <div className="flex justify-center">
-          <span className={`inline-flex items-center gap-2 px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${statusClass}`}>
-            {icon}
-            {status}
-          </span>
-        </div>
-      </td>
-    </tr>
   );
 }

@@ -1,66 +1,78 @@
 "use client";
 
-import { Save, Database, CloudFog, ShieldAlert } from "lucide-react";
+import { useState } from "react";
 
 export default function AdminSettingsPage() {
+  const [maintenance, setMaintenance] = useState(false);
+  const [webhooks, setWebhooks] = useState(true);
+  const [caching, setCaching] = useState(true);
+
   return (
-    <div className="space-y-12 animate-fade-in relative z-10">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
-        <div className="space-y-4">
-           <div className="h-px w-12 bg-primary/50" />
-           <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-600">Master Controls</p>
-           <h1 className="text-5xl font-serif italic text-white tracking-tight">Core <span className="text-primary not-italic">Mechanics</span></h1>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-         {/* System Config */}
-         <div className="space-y-6">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 pl-4 border-l-2 border-primary">System Overrides</h2>
-            <div className="space-y-4">
-               <AdminConfigRow icon={<Database />} title="Entity Caching" active />
-               <AdminConfigRow icon={<CloudFog />} title="Webhooks (Stripe)" active />
-               <AdminConfigRow icon={<ShieldAlert />} title="Sanctuary Lockdown" danger />
-            </div>
-         </div>
-
-         {/* Variables */}
-         <div className="bg-white/2 border border-white/5 rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000" />
-            <div className="relative z-10 space-y-8">
-               <h3 className="font-serif italic text-xl text-white">Universal Constants</h3>
-               <div className="space-y-4">
-                  <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Global Tax Rate (%)</label>
-                     <input type="number" defaultValue="18" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 text-sm font-bold" />
-                  </div>
-                  <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Support Enclave Email</label>
-                     <input type="email" defaultValue="master@akaal.zen" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 text-sm font-bold" />
-                  </div>
-               </div>
-               <button className="flex items-center gap-3 bg-primary text-background-dark px-6 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white transition-all shadow-xl">
-                 Commit to Registry <Save size={16} />
-               </button>
-            </div>
-         </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      {/* Header */}
+      <div style={{ paddingBottom: "24px", borderBottom: "1px solid rgba(212,169,74,0.08)" }}>
+        <div style={{ width: "40px", height: "2px", background: "#d4a94a", borderRadius: "99px", marginBottom: "12px" }} />
+        <p style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(160,155,135,0.45)", margin: "0 0 6px" }}>System</p>
+        <h1 style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "clamp(26px,3vw,36px)", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
+          Core <em style={{ color: "#d4a94a" }}>Mechanics</em>
+        </h1>
       </div>
-    </div>
-  );
-}
 
-function AdminConfigRow({ icon, title, active, danger }: { icon: React.ReactNode, title: string, active?: boolean, danger?: boolean }) {
-  return (
-    <div className={`flex items-center justify-between p-6 rounded-2xl bg-white/2 border group transition-all ${danger ? 'border-red-500/20 hover:border-red-500/40' : 'border-white/5 hover:border-primary/20'}`}>
-       <div className="flex items-center gap-4">
-          <div className={`text-zinc-500 transition-colors ${danger ? 'group-hover:text-red-400' : 'group-hover:text-primary'}`}>
-             <div className="scale-75">{icon}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        {/* System toggles */}
+        <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "16px", padding: "24px" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "15px", fontWeight: 600, color: "#f0ede6", margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ display: "inline-block", width: "3px", height: "16px", background: "#d4a94a", borderRadius: "2px" }} />
+            System Overrides
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {[
+              { icon: "database", label: "Entity Caching", value: caching, set: setCaching, danger: false },
+              { icon: "cloud", label: "Webhooks (Stripe)", value: webhooks, set: setWebhooks, danger: false },
+              { icon: "security", label: "Sanctuary Lockdown", value: maintenance, set: setMaintenance, danger: true },
+            ].map(item => (
+              <div key={item.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderRadius: "10px", background: "rgba(212,169,74,0.02)", border: item.danger ? "1px solid rgba(248,113,113,0.1)" : "1px solid rgba(212,169,74,0.07)", transition: "border-color 0.2s" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "17px", color: item.danger ? (item.value ? "#f87171" : "rgba(248,113,113,0.4)") : "#d4a94a" }}>{item.icon}</span>
+                  <span style={{ fontSize: "12px", fontWeight: item.danger ? 700 : 500, color: item.danger ? "rgba(248,113,113,0.8)" : "rgba(200,195,178,0.7)" }}>{item.label}</span>
+                </div>
+                <button onClick={() => item.set(!item.value)} style={{ width: "42px", height: "22px", borderRadius: "99px", border: "none", cursor: "pointer", position: "relative", transition: "background 0.25s", background: item.value ? (item.danger ? "#f87171" : "#d4a94a") : "rgba(255,255,255,0.08)", boxShadow: item.value ? `0 0 10px ${item.danger ? "rgba(248,113,113,0.3)" : "rgba(212,169,74,0.3)"}` : "none" }}>
+                  <span style={{ position: "absolute", top: "3px", left: item.value ? "21px" : "3px", width: "16px", height: "16px", borderRadius: "50%", background: "#fff", transition: "left 0.25s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+                </button>
+              </div>
+            ))}
           </div>
-          <span className={`text-[11px] font-black uppercase tracking-widest ${danger ? 'text-red-500' : 'text-zinc-300'}`}>{title}</span>
-       </div>
-       <div className={`h-6 w-12 rounded-full border relative p-1 transition-colors ${active ? 'bg-primary/10 border-primary/20' : 'bg-background-dark border-white/10'}`}>
-          <div className={`h-full aspect-square rounded-full transition-transform ${active ? 'bg-primary translate-x-6 shadow-[0_0_8px_rgba(236,149,19,0.5)]' : 'bg-zinc-600'}`} />
-       </div>
+        </div>
+
+        {/* Constants */}
+        <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.1)", borderRadius: "16px", padding: "24px", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "120px", height: "120px", background: "rgba(212,169,74,0.04)", borderRadius: "50%", filter: "blur(30px)", pointerEvents: "none" }} />
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "15px", fontWeight: 600, color: "#f0ede6", margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px", position: "relative", zIndex: 1 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "17px", color: "#d4a94a" }}>settings</span>
+            Universal Constants
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px", position: "relative", zIndex: 1 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(160,155,135,0.45)" }}>Global Tax Rate (%)</label>
+              <input type="number" defaultValue="18" style={{ background: "rgba(212,169,74,0.03)", border: "1px solid rgba(212,169,74,0.12)", borderRadius: "8px", padding: "10px 12px", color: "#f0ede6", fontSize: "13px", outline: "none", fontFamily: "var(--font-sans)" }}
+                onFocus={e => e.target.style.borderColor = "rgba(212,169,74,0.3)"}
+                onBlur={e => e.target.style.borderColor = "rgba(212,169,74,0.12)"} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(160,155,135,0.45)" }}>Support Email</label>
+              <input type="email" defaultValue="support@akaal.com" style={{ background: "rgba(212,169,74,0.03)", border: "1px solid rgba(212,169,74,0.12)", borderRadius: "8px", padding: "10px 12px", color: "#f0ede6", fontSize: "13px", outline: "none", fontFamily: "var(--font-sans)" }}
+                onFocus={e => e.target.style.borderColor = "rgba(212,169,74,0.3)"}
+                onBlur={e => e.target.style.borderColor = "rgba(212,169,74,0.12)"} />
+            </div>
+            <button style={{ display: "flex", alignItems: "center", gap: "8px", background: "#d4a94a", color: "#10100e", padding: "10px 20px", borderRadius: "9px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", border: "none", cursor: "pointer", transition: "background 0.2s", marginTop: "4px", width: "fit-content" }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#e8c06c"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "#d4a94a"}>
+              <span className="material-symbols-outlined" style={{ fontSize: "15px" }}>save</span>
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
