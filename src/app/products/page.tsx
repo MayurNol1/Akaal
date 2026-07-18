@@ -1,19 +1,30 @@
 import Link from "next/link";
 import { Prisma, Product } from "@prisma/client";
 import prisma from "@/lib/prisma";
+import { serializeData } from "@/lib/serialization";
+import { ReviewService } from "@/modules/reviews/service";
 import { SortSelect } from "./sort-select";
 import { Pagination } from "./pagination";
+import { ProductFilters } from "./filters";
+import { ShopLayout } from "./shop-layout";
 import { ProductCardStitch } from "@/components/products/product-card";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductListingPage(props: {
-  searchParams?: Promise<{ query?: string; category?: string; sort?: string; page?: string }>;
+  searchParams?: Promise<{ query?: string; category?: string; sort?: string; page?: string; price?: string; rating?: string; new?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
   const categoryId = searchParams?.category || "";
   const sort = searchParams?.sort || "relevance";
+  // Price bucket like "0-500" or "10000-" (open-ended)
+  const priceRange = /^\d+-\d*$/.test(searchParams?.price ?? "") ? searchParams!.price! : "";
+  const [minPriceStr, maxPriceStr] = priceRange.split("-");
+  const minPrice = Number(minPriceStr) || 0;
+  const maxPrice = maxPriceStr ? Number(maxPriceStr) : null;
+  const ratingFilter = searchParams?.rating === "4";
+  const newOnly = searchParams?.new === "1";
   const page = Number(searchParams?.page) || 1;
   const limit = 9;
   const skip = (page - 1) * limit;
@@ -23,25 +34,68 @@ export default async function ProductListingPage(props: {
   else if (sort === "price_desc") orderBy = { price: "desc" };
   else if (sort === "newest") orderBy = { createdAt: "desc" };
 
-  const totalProducts = await prisma.product.count({
-    where: {
-      isActive: true,
-      ...(query ? { name: { contains: query, mode: "insensitive" } } : {}),
-      ...(categoryId ? { categoryId } : {}),
-    },
-  });
+  // "4★ & up" — products whose average review rating is at least 4
+  let ratedIds: string[] | null = null;
+  if (ratingFilter) {
+    const rated = await prisma.review.groupBy({
+      by: ["productId"],
+      _avg: { rating: true },
+      having: { rating: { _avg: { gte: 4 } } },
+    });
+    ratedIds = rated.map((r) => r.productId);
+  }
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const where: Prisma.ProductWhereInput = {
+    isActive: true,
+    ...(query ? { name: { contains: query, mode: "insensitive" } } : {}),
+    ...(categoryId ? { categoryId } : {}),
+    ...(priceRange ? { price: { gte: minPrice, ...(maxPrice ? { lte: maxPrice } : {}) } } : {}),
+    ...(ratedIds !== null ? { id: { in: ratedIds } } : {}),
+    ...(newOnly ? { createdAt: { gte: thirtyDaysAgo } } : {}),
+  };
+
+  // Same URL minus the search query — used by the "clear search" chip
+  const clearParams = new URLSearchParams();
+  if (categoryId) clearParams.set("category", categoryId);
+  if (sort !== "relevance") clearParams.set("sort", sort);
+  if (priceRange) clearParams.set("price", priceRange);
+  if (ratingFilter) clearParams.set("rating", "4");
+  if (newOnly) clearParams.set("new", "1");
+  const clearQueryHref = clearParams.size ? `?${clearParams}` : "";
+
+  // In-stock items always list before out-of-stock ones. Prisma can't order
+  // by a boolean expression, so the page slice is stitched from two queries
+  // over a virtual [in-stock…, out-of-stock…] sequence.
+  const whereIn: Prisma.ProductWhereInput = { ...where, stock: { gt: 0 } };
+  const whereOut: Prisma.ProductWhereInput = { ...where, stock: 0 };
+  const [totalIn, totalOut] = await Promise.all([
+    prisma.product.count({ where: whereIn }),
+    prisma.product.count({ where: whereOut }),
+  ]);
+  const totalProducts = totalIn + totalOut;
   const totalPages = Math.ceil(totalProducts / limit);
 
-  const products = await prisma.product.findMany({
-    where: {
-      isActive: true,
-      ...(query ? { name: { contains: query, mode: "insensitive" } } : {}),
-      ...(categoryId ? { categoryId } : {}),
-    },
-    orderBy,
-    skip,
-    take: limit,
-  });
+  const takeIn = Math.max(0, Math.min(limit, totalIn - skip));
+  const skipOut = Math.max(0, skip - totalIn);
+  const takeOut = limit - takeIn;
+
+  const [inStockProducts, outOfStockProducts] = await Promise.all([
+    takeIn > 0
+      ? prisma.product.findMany({ where: whereIn, orderBy, skip: Math.min(skip, totalIn), take: takeIn })
+      : Promise.resolve([]),
+    takeOut > 0
+      ? prisma.product.findMany({ where: whereOut, orderBy, skip: skipOut, take: takeOut })
+      : Promise.resolve([]),
+  ]);
+
+  // serializeData strips Prisma Decimal before products cross into the
+  // client component <ProductCardStitch>
+  const products = serializeData([...inStockProducts, ...outOfStockProducts]);
+
+  const ratings = await ReviewService.getAggregates(products.map((p: { id: string }) => p.id));
 
   const categoriesDb = await prisma.category.findMany({
     include: {
@@ -57,7 +111,7 @@ export default async function ProductListingPage(props: {
       {/* ── HERO BAND ── */}
       <div style={{
         paddingTop: "72px",
-        padding: "120px 60px 56px",
+        padding: "120px clamp(16px,4vw,60px) 56px",
         textAlign: "center",
         borderBottom: "1px solid rgba(212,169,74,0.1)",
         position: "relative", overflow: "hidden",
@@ -97,78 +151,46 @@ export default async function ProductListingPage(props: {
       {/* ── FILTER BAR ── */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "18px 60px",
+        padding: "18px clamp(16px,4vw,60px)",
         borderBottom: "1px solid rgba(212,169,74,0.1)",
         gap: "16px", flexWrap: "wrap",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)" }}>Sort by:</span>
-          <SortSelect currentSort={sort} />
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)" }}>Sort by:</span>
+            <SortSelect currentSort={sort} />
+          </div>
+          {query && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 8px 6px 14px", borderRadius: "99px", fontSize: "12px", background: "rgba(212,169,74,0.08)", border: "1px solid rgba(212,169,74,0.22)", color: "#d4a94a" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>search</span>
+              Results for &ldquo;{query}&rdquo;
+              <Link
+                href={`/products${clearQueryHref}`}
+                aria-label={`Clear search for ${query}`}
+                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "50%", background: "rgba(212,169,74,0.15)", color: "#d4a94a", textDecoration: "none", fontSize: "12px", lineHeight: 1 }}
+              >✕</Link>
+            </span>
+          )}
         </div>
         <p style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)" }}>
-          Showing {products.length} of {totalProducts} items
+          {query ? `${totalProducts} match${totalProducts !== 1 ? "es" : ""} found` : `Showing ${products.length} of ${totalProducts} items`}
         </p>
       </div>
 
       {/* ── SHOP LAYOUT ── */}
-      <div style={{ display: "flex", gap: 0 }}>
-
-        {/* Sidebar filters */}
-        <aside style={{
-          width: "240px", flexShrink: 0,
-          padding: "28px 24px",
-          borderRight: "1px solid rgba(212,169,74,0.1)",
-          position: "sticky", top: "72px", height: "calc(100vh - 72px)", overflowY: "auto",
-        }}>
-          <div style={{ marginBottom: "28px" }}>
-            <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(160,155,135,0.45)", marginBottom: "12px" }}>
-              Category
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                <input type="checkbox" defaultChecked style={{ width: "14px", height: "14px", accentColor: "#d4a94a", cursor: "pointer" }} />
-                <span style={{ fontSize: "12px", color: "rgba(200,195,178,0.65)" }}>All Items</span>
-              </label>
-              {categoriesDb.map(cat => (
-                <label key={cat.id} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                  <input type="checkbox" style={{ width: "14px", height: "14px", accentColor: "#d4a94a", cursor: "pointer" }} />
-                  <span style={{ fontSize: "12px", color: "rgba(200,195,178,0.65)" }}>{cat.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div style={{ height: "1px", background: "rgba(212,169,74,0.1)", marginBottom: "24px" }} />
-          <div style={{ marginBottom: "28px" }}>
-            <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(160,155,135,0.45)", marginBottom: "12px" }}>
-              Price Range
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <input type="range" min={0} max={50000} defaultValue={50000} style={{ accentColor: "#d4a94a", width: "100%" }} />
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "rgba(160,155,135,0.45)" }}>
-                <span>₹0</span><span>₹50,000</span>
-              </div>
-            </div>
-          </div>
-          <div style={{ height: "1px", background: "rgba(212,169,74,0.1)", marginBottom: "24px" }} />
-          <div style={{ marginBottom: "28px" }}>
-            <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(160,155,135,0.45)", marginBottom: "12px" }}>
-              Availability
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                <input type="checkbox" defaultChecked style={{ width: "14px", height: "14px", accentColor: "#d4a94a" }} />
-                <span style={{ fontSize: "12px", color: "rgba(200,195,178,0.65)" }}>In Stock</span>
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                <input type="checkbox" style={{ width: "14px", height: "14px", accentColor: "#d4a94a" }} />
-                <span style={{ fontSize: "12px", color: "rgba(200,195,178,0.65)" }}>Low Stock</span>
-              </label>
-            </div>
-          </div>
-        </aside>
-
+      <ShopLayout
+        sidebar={
+          <ProductFilters
+            categories={categoriesDb.map((c) => ({ id: c.id, name: c.name, count: c._count.products }))}
+            currentCategory={categoryId}
+            currentPrice={priceRange}
+            currentRating={ratingFilter}
+            currentNew={newOnly}
+          />
+        }
+      >
         {/* Product Grid */}
-        <div style={{ flex: 1, padding: "28px 40px 60px" }}>
+        <div style={{ padding: "28px clamp(16px,3vw,40px) 60px" }}>
           {products.length === 0 ? (
             <div style={{
               height: "40vh", display: "flex", flexDirection: "column",
@@ -182,9 +204,9 @@ export default async function ProductListingPage(props: {
               </p>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+            <div className="grid-products">
               {products.map((product: Product) => (
-                <ProductCardStitch key={product.id} product={product} />
+                <ProductCardStitch key={product.id} product={product} rating={ratings[product.id]} />
               ))}
             </div>
           )}
@@ -192,17 +214,9 @@ export default async function ProductListingPage(props: {
             <Pagination totalPages={totalPages} currentPage={page} />
           </div>
         </div>
-      </div>
+      </ShopLayout>
 
-      {/* Footer */}
-      <footer style={{ padding: "36px 60px", borderTop: "1px solid rgba(212,169,74,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)" }}>© 2026 Akaal Spiritual Arts. All rights reserved.</p>
-        <div style={{ display: "flex", gap: "24px" }}>
-          {["Privacy Policy", "Terms of Service", "Support"].map(item => (
-            <a key={item} href="#" style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>{item}</a>
-          ))}
-        </div>
-      </footer>
+      {/* Shared <Footer /> is rendered by the root layout */}
     </div>
   );
 }

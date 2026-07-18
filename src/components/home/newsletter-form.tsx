@@ -5,15 +5,32 @@ import { useState } from "react";
 export function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setStatus("loading");
-    await new Promise((r) => setTimeout(r, 1200));
-    setStatus("success");
-    setEmail("");
-    setTimeout(() => setStatus("idle"), 5000);
+    setError(null);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setError(json.error || "Subscription failed. Try again.");
+        setStatus("idle");
+        return;
+      }
+      setStatus("success");
+      setEmail("");
+      setTimeout(() => setStatus("idle"), 5000);
+    } catch {
+      setError("Subscription failed. Try again.");
+      setStatus("idle");
+    }
   };
 
   if (status === "success") {
@@ -86,6 +103,9 @@ export function NewsletterForm() {
           </>
         )}
       </button>
+      {error && (
+        <p role="alert" style={{ width: "100%", fontSize: "12px", color: "#f87171", margin: "4px 0 0", textAlign: "center" }}>{error}</p>
+      )}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </form>
   );

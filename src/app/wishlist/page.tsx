@@ -2,42 +2,60 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Product } from "@prisma/client";
 import { ProductCardStitch } from "@/components/products/product-card";
+import { getServerWishlist, getLocalLikedIds, mergeGuestLikes } from "@/lib/wishlist-client";
 
 export default function WishlistPage() {
+  const { status } = useSession();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [merged, setMerged] = useState(false);
 
   useEffect(() => {
+    if (status === "loading") return;
+    let cancelled = false;
+
     const loadWishlist = async () => {
       setLoading(true);
-      const likedIds: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith("liked_")) likedIds.push(key.replace("liked_", ""));
-      }
-      if (likedIds.length === 0) {
-        setProducts([]);
-        setLoading(false);
-        return;
-      }
       try {
+        let likedIds: string[];
+        if (status === "authenticated") {
+          // Carry over any guest likes into the account first
+          if (!merged) {
+            await mergeGuestLikes();
+            if (!cancelled) setMerged(true);
+          }
+          likedIds = Array.from(await getServerWishlist(true));
+        } else {
+          likedIds = getLocalLikedIds();
+        }
+
+        if (likedIds.length === 0) {
+          if (!cancelled) setProducts([]);
+          return;
+        }
+
         const res = await fetch(`/api/products?ids=${likedIds.join(",")}`);
         const data = await res.json();
+        if (cancelled) return;
         if (Array.isArray(data)) setProducts(data);
         else if (data?.success && Array.isArray(data.data)) setProducts(data.data);
       } catch (err) {
         console.error("Failed to fetch wishlist products:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadWishlist();
     window.addEventListener("wishlist-updated", loadWishlist);
-    return () => window.removeEventListener("wishlist-updated", loadWishlist);
-  }, []);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("wishlist-updated", loadWishlist);
+    };
+  }, [status, merged]);
 
   return (
     <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px" }}>

@@ -12,12 +12,7 @@ export default async function DashboardPage() {
   if (!session?.user?.id) return null;
 
   const ordersCount = await prisma.order.count({ where: { userId: session.user.id } });
-  const cart = await prisma.cart.findUnique({
-    where: { userId: session.user.id },
-    include: { items: true },
-  });
-
-  const activeIntentions = cart?.items.reduce((acc, item) => acc + item.quantity, 0) || 0;
+  const wishlistCount = await prisma.wishlistItem.count({ where: { userId: session.user.id } });
 
   const recentOrders = await prisma.order.findMany({
     where: { userId: session.user.id },
@@ -27,18 +22,16 @@ export default async function DashboardPage() {
 
   const navItems = [
     { icon: "shopping_bag", label: "My Orders", count: ordersCount, href: "/orders" },
-    { icon: "favorite_border", label: "Wishlist", href: "/wishlist" },
-    { icon: "person", label: "Profile", href: "/profile" },
-    { icon: "shield", label: "Security", href: "/settings" },
-    { icon: "location_on", label: "Addresses", href: "/settings" },
+    { icon: "favorite_border", label: "Wishlist", count: wishlistCount, href: "/wishlist" },
+    { icon: "settings", label: "Settings", href: "/settings" },
   ];
 
   return (
     <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px" }}>
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "40px clamp(16px,4vw,48px) 80px", display: "flex", gap: "clamp(20px,3vw,40px)", alignItems: "flex-start" }}>
+      <div className="layout-sidebar" style={{ maxWidth: "1280px", margin: "0 auto", padding: "40px clamp(16px,4vw,48px) 80px", gap: "clamp(20px,3vw,40px)" }}>
 
         {/* ── SIDEBAR ── */}
-        <aside style={{
+        <aside className="sidebar-rail" style={{
           width: "270px", flexShrink: 0,
           background: "#161612", border: "1px solid rgba(212,169,74,0.1)",
           borderRadius: "18px", padding: "28px", position: "sticky", top: "90px",
@@ -48,17 +41,20 @@ export default async function DashboardPage() {
             <div style={{
               width: "80px", height: "80px", borderRadius: "50%",
               border: "3px solid #d4a94a", overflow: "hidden", position: "relative",
+              background: "rgba(212,169,74,0.1)",
+              display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <Image
-                src={session.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDb9HxOmlluH2qUdJkJzGw0kBx49GCM0HpWK5hrJJE0zuqXExpKlTBAIgmxzvVgRKw6Ny46fqG9KIj4nLjOjB-ljAg2W6oXuI0cqCnyI1s9AgrsQRY0iHEb5g08VHRGOVW0iXh30dhVPSLnLCcyiOPTdtwdEKkinVMq3kovK6x2Vh18D0OxW5Mmkis_2TtVZpYMUI9fX2O5On1dIcDKT-3nbj64A56WkBYyMkz_dXUaIAvDxPLjRwbrDUqjz6p4febEV8uKJtS0sA4"}
-                alt="Profile"
-                fill
-                style={{ objectFit: "cover" }}
-              />
+              {session.user?.image ? (
+                <Image src={session.user.image} alt="Profile" fill style={{ objectFit: "cover" }} />
+              ) : (
+                <span style={{ fontFamily: "var(--font-serif)", fontSize: "32px", fontWeight: 700, color: "#d4a94a" }}>
+                  {(session.user?.name || "D")[0].toUpperCase()}
+                </span>
+              )}
             </div>
             <div>
               <p style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "18px", fontWeight: 600, color: "#f0ede6", margin: "0 0 2px" }}>
-                {session.user?.name || "Spiritual Seeker"}
+                {session.user?.name || "Disciple"}
               </p>
               <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", margin: 0 }}>
                 {session.user?.email}
@@ -68,7 +64,7 @@ export default async function DashboardPage() {
               padding: "4px 12px", borderRadius: "99px", fontSize: "10px", fontWeight: 700,
               background: "rgba(212,169,74,0.1)", border: "1px solid rgba(212,169,74,0.2)", color: "#d4a94a",
             }}>
-              Sacred Member
+              Disciple
             </div>
           </div>
 
@@ -112,15 +108,15 @@ export default async function DashboardPage() {
           <div style={{ marginBottom: "8px" }}>
             <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#d4a94a", marginBottom: "8px" }}>Welcome back</p>
             <h1 style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "clamp(28px,3vw,38px)", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
-              Namaste, <em style={{ color: "#d4a94a" }}>{session?.user?.name?.split(" ")[0] || "Seeker"}</em> 🙏
+              Namaste, <em style={{ color: "#d4a94a" }}>{session?.user?.name?.split(" ")[0] || "Disciple"}</em> 🙏
             </h1>
           </div>
 
           {/* Stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+          <div className="grid-stats">
             {[
               { icon: "shopping_bag", label: "Total Orders", value: ordersCount, unit: "orders" },
-              { icon: "favorite_border", label: "Wishlist", value: activeIntentions, unit: "saved" },
+              { icon: "favorite_border", label: "Wishlist", value: wishlistCount, unit: "saved" },
               { icon: "stars", label: "Loyalty Points", value: ordersCount * 150, unit: "pts" },
             ].map(stat => (
               <div key={stat.label} style={{

@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getOrdersForUser } from "@/modules/orders/service";
+import { OrderStatusLabels } from "@/constants/order-status";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  PENDING:   { label: "Processing", color: "#ff9933", bg: "rgba(255,153,51,0.08)",  border: "rgba(255,153,51,0.2)" },
-  PAID:      { label: "Paid",       color: "#d4a94a", bg: "rgba(212,169,74,0.08)",  border: "rgba(212,169,74,0.2)" },
-  SHIPPED:   { label: "Shipped",    color: "#bb86fc", bg: "rgba(187,134,252,0.08)", border: "rgba(187,134,252,0.2)" },
-  DELIVERED: { label: "Delivered",  color: "#25e2f4", bg: "rgba(37,226,244,0.08)",  border: "rgba(37,226,244,0.2)" },
-  CANCELLED: { label: "Cancelled",  color: "#f87171", bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.2)" },
+  PENDING:   { label: OrderStatusLabels.PENDING,   color: "#ff9933", bg: "rgba(255,153,51,0.08)",  border: "rgba(255,153,51,0.2)" },
+  PAID:      { label: OrderStatusLabels.PAID,      color: "#d4a94a", bg: "rgba(212,169,74,0.08)",  border: "rgba(212,169,74,0.2)" },
+  SHIPPED:   { label: OrderStatusLabels.SHIPPED,   color: "#bb86fc", bg: "rgba(187,134,252,0.08)", border: "rgba(187,134,252,0.2)" },
+  DELIVERED: { label: OrderStatusLabels.DELIVERED, color: "#25e2f4", bg: "rgba(37,226,244,0.08)",  border: "rgba(37,226,244,0.2)" },
+  CANCELLED: { label: OrderStatusLabels.CANCELLED, color: "#f87171", bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.2)" },
 };
 
 export default async function OrdersPage({ searchParams }: { searchParams?: Promise<{ success?: string }> }) {

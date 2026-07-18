@@ -3,6 +3,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { getOrderForUser } from "@/modules/orders/service";
+import { totalsWithDiscountAmount } from "@/lib/pricing";
+import { OrderStatusLabels } from "@/constants/order-status";
 
 interface OrderDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -10,11 +12,11 @@ interface OrderDetailsPageProps {
 export const dynamic = "force-dynamic";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  PENDING:   { label: "Processing",  color: "#ff9933",  bg: "rgba(255,153,51,0.1)",  icon: "schedule" },
-  PAID:      { label: "Paid",        color: "#d4a94a",  bg: "rgba(212,169,74,0.1)",  icon: "payments" },
-  SHIPPED:   { label: "Shipped",     color: "#bb86fc",  bg: "rgba(187,134,252,0.1)", icon: "local_shipping" },
-  DELIVERED: { label: "Delivered",   color: "#25e2f4",  bg: "rgba(37,226,244,0.1)",  icon: "check_circle" },
-  CANCELLED: { label: "Cancelled",   color: "#f87171",  bg: "rgba(248,113,113,0.1)", icon: "cancel" },
+  PENDING:   { label: OrderStatusLabels.PENDING,   color: "#ff9933",  bg: "rgba(255,153,51,0.1)",  icon: "schedule" },
+  PAID:      { label: OrderStatusLabels.PAID,      color: "#d4a94a",  bg: "rgba(212,169,74,0.1)",  icon: "payments" },
+  SHIPPED:   { label: OrderStatusLabels.SHIPPED,   color: "#bb86fc",  bg: "rgba(187,134,252,0.1)", icon: "local_shipping" },
+  DELIVERED: { label: OrderStatusLabels.DELIVERED, color: "#25e2f4",  bg: "rgba(37,226,244,0.1)",  icon: "check_circle" },
+  CANCELLED: { label: OrderStatusLabels.CANCELLED, color: "#f87171",  bg: "rgba(248,113,113,0.1)", icon: "cancel" },
 };
 
 export default async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
@@ -41,7 +43,19 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
   if (!order) return notFound();
 
   const totalNumber = Number(order.total);
+  // Breakdown is derived from the line items + stored coupon discount;
+  // "Total Paid" is the stored amount
+  const itemsSubtotal = order.items.reduce(
+    (sum, item) => sum + Number(item.price) * item.quantity,
+    0
+  );
+  const orderExtras = order as { couponCode?: string | null; couponDiscount?: unknown };
+  const breakdown = totalsWithDiscountAmount(itemsSubtotal, Number(orderExtras.couponDiscount ?? 0));
   const st = STATUS_CONFIG[order.status] || STATUS_CONFIG.PENDING;
+  const address = (order as { shippingAddress?: unknown }).shippingAddress as
+    | { firstName: string; lastName: string; email: string; phone: string; address1: string; city: string; pincode: string }
+    | null
+    | undefined;
 
   return (
     <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px", paddingBottom: "80px" }}>
@@ -129,16 +143,47 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
           </div>
         </div>
 
+        {/* Shipping address */}
+        {address && (
+          <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "16px", padding: "22px", marginBottom: "24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>local_shipping</span>
+              <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "18px", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
+                Shipping <em style={{ color: "#d4a94a" }}>Address</em>
+              </h2>
+            </div>
+            <p style={{ fontSize: "13px", fontWeight: 600, color: "#f0ede6", margin: "0 0 4px" }}>
+              {address.firstName} {address.lastName}
+            </p>
+            <p style={{ fontSize: "13px", color: "rgba(200,195,178,0.65)", margin: "0 0 4px", lineHeight: 1.6 }}>
+              {address.address1}, {address.city} — {address.pincode}
+            </p>
+            <p style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)", margin: 0 }}>
+              {address.phone} · {address.email}
+            </p>
+          </div>
+        )}
+
         {/* Total summary */}
         <div style={{ background: "#161612", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "16px", padding: "22px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "16px", borderBottom: "1px solid rgba(212,169,74,0.07)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
               <span style={{ color: "rgba(160,155,135,0.45)" }}>Subtotal ({order.items.length} item{order.items.length !== 1 ? "s" : ""})</span>
-              <span style={{ color: "#f0ede6", fontWeight: 600 }}>₹{totalNumber.toLocaleString("en-IN")}</span>
+              <span style={{ color: "#f0ede6", fontWeight: 600 }}>₹{breakdown.subtotal.toLocaleString("en-IN")}</span>
             </div>
+            {breakdown.discount > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                <span style={{ color: "rgba(160,155,135,0.45)" }}>Coupon{orderExtras.couponCode ? ` (${orderExtras.couponCode})` : ""}</span>
+                <span style={{ color: "#25e2f4", fontWeight: 600 }}>−₹{breakdown.discount.toLocaleString("en-IN")}</span>
+              </div>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
               <span style={{ color: "rgba(160,155,135,0.45)" }}>Shipping</span>
-              <span style={{ color: "#25e2f4", fontWeight: 600 }}>{totalNumber >= 999 ? "Free" : "₹99"}</span>
+              <span style={{ color: "#25e2f4", fontWeight: 600 }}>{breakdown.shipping === 0 ? "Free" : `₹${breakdown.shipping}`}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+              <span style={{ color: "rgba(160,155,135,0.45)" }}>GST (5%)</span>
+              <span style={{ color: "#f0ede6", fontWeight: 600 }}>₹{breakdown.tax.toLocaleString("en-IN")}</span>
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "16px" }}>

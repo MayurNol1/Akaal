@@ -30,7 +30,7 @@ export default function AboutPage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: "28px", fontSize: "16px", lineHeight: 1.8, color: "rgba(200,195,178,0.65)" }}>
           <p>
-            <strong style={{ color: "#f0ede6" }}>Akaal</strong> represents the <em>timeless, the eternal, and the deathless</em>. Born from a profound desire to bridge ancient spiritual wisdom with modern devotion, our sanctuary offers a curated collection of high-vibration relics and artifacts — each chosen with care and intention.
+            <strong style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "19px", fontWeight: 700, color: "#d4a94a", letterSpacing: "0.02em" }}>Akaal</strong> represents the <em>timeless, the eternal, and the deathless</em>. Born from a profound desire to bridge ancient spiritual wisdom with modern devotion, our sanctuary offers a curated collection of high-vibration relics and artifacts — each chosen with care and intention.
           </p>
           <p>
             Every piece in our collection — whether a Panchmukhi Rudraksha, a Singing Bowl, or a Sandalwood Mala — is ethically sourced and energized to elevate your spiritual practices. We believe in providing instruments of peace that resonate deeply with your inner dharma.

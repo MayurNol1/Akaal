@@ -34,6 +34,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const { email, password } = parsedCredentials.data
           const user = await prisma.user.findUnique({ where: { email } })
           if (!user || !user.password) return null
+          if (user.isDisabled) return null
 
           const passwordsMatch = await bcrypt.compare(password, user.password)
 
@@ -44,6 +45,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    // Block restricted accounts on all providers (OAuth included)
+    async signIn({ user }) {
+      if (user?.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          select: { isDisabled: true },
+        })
+        if (dbUser?.isDisabled) return false
+      }
+      return true
+    },
+  },
   session: {
     strategy: "jwt",
   },

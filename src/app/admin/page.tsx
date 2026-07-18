@@ -86,7 +86,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+      <div className="grid-stats">
         {[
           { label: "Total Revenue", value: `₹${totalRevenue.toLocaleString("en-IN")}`, icon: "payments", color: "#d4a94a", sub: "All time" },
           { label: "Total Orders", value: ordersCount, icon: "receipt_long", color: "#25e2f4", sub: "All time" },
@@ -111,7 +111,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Chart + Quick Links */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "16px", alignItems: "start" }}>
+      <div className="layout-chart">
         {/* Revenue Chart */}
         <div style={cardStyle}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
@@ -146,7 +146,7 @@ export default async function AdminDashboardPage() {
         {/* Quick Actions */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {[
-            { href: "/admin/products/new", icon: "add_circle", label: "Add Product", sub: "List a new artifact" },
+            { href: "/admin/products/create", icon: "add_circle", label: "Add Product", sub: "List a new artifact" },
             { href: "/admin/orders", icon: "receipt_long", label: "View Orders", sub: `${ordersCount} total orders` },
             { href: "/admin/users", icon: "group", label: "Manage Users", sub: `${usersCount} customers` },
           ].map(action => (
@@ -213,7 +213,7 @@ export default async function AdminDashboardPage() {
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: "12px 16px", fontFamily: "monospace", fontSize: "11px", color: "#d4a94a" }}>AKL-{p.id.slice(0, 6).toUpperCase()}</td>
+                    <td style={{ padding: "12px 16px", fontFamily: "monospace", fontSize: "11px", color: "#d4a94a" }}>AKL-{p.id.slice(-6).toUpperCase()}</td>
                     <td style={{ padding: "12px 16px", color: "rgba(160,155,135,0.45)", fontSize: "11px" }}>{p.category?.name || "—"}</td>
                     <td style={{ padding: "12px 16px", color: "rgba(200,195,178,0.65)" }}>{p.stock} units</td>
                     <td style={{ padding: "12px 16px", fontFamily: "var(--font-serif)", fontSize: "14px", fontWeight: 700, color: "#f0ede6" }}>₹{Number(p.price).toLocaleString("en-IN")}</td>

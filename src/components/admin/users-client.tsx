@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Search, Filter, Mail, Ban, CheckCircle2, User as UserIcon, X } from "lucide-react";
+import { Users, Search, Mail, Ban, CheckCircle2, User as UserIcon, X, ShieldCheck } from "lucide-react";
 import { useState, useMemo } from "react";
 
 type User = {
@@ -8,6 +8,7 @@ type User = {
   name: string | null;
   email: string | null;
   role: string;
+  isDisabled: boolean;
   createdAt: Date | string;
 };
 
@@ -17,12 +18,13 @@ interface AdminUsersClientProps {
 
 export function AdminUsersClient({ initialUsers }: AdminUsersClientProps) {
   const [query, setQuery] = useState("");
-  const [users] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   const filteredUsers = useMemo(() => {
-    return users.filter(u => 
-      u.name?.toLowerCase().includes(query.toLowerCase()) || 
+    return users.filter(u =>
+      u.name?.toLowerCase().includes(query.toLowerCase()) ||
       u.email?.toLowerCase().includes(query.toLowerCase())
     );
   }, [users, query]);
@@ -32,8 +34,26 @@ export function AdminUsersClient({ initialUsers }: AdminUsersClientProps) {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleIntervene = (userId: string, action: string) => {
-    showToast(`${action} action initiated for user ${userId.slice(0, 6)}...`, 'success');
+  const updateUser = async (userId: string, patch: { role?: "USER" | "ADMIN"; isDisabled?: boolean }, successMessage: string) => {
+    setBusyId(userId);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, ...patch }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        showToast(json.error || "Action failed", "error");
+        return;
+      }
+      setUsers(prev => prev.map(u => (u.id === userId ? { ...u, ...json.data } : u)));
+      showToast(successMessage, "success");
+    } catch {
+      showToast("Action failed. Try again.", "error");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   return (
@@ -67,21 +87,30 @@ export function AdminUsersClient({ initialUsers }: AdminUsersClientProps) {
       {/* Filter Bar */}
       <div className="flex flex-col md:flex-row gap-6 items-center">
         <div className="relative flex-1 group w-full">
-          <Search style={{ color:"#d4a94a" }} size={18} />
-          <input 
-            type="text" 
+          <Search style={{ position:"absolute", left:"16px", top:"50%", transform:"translateY(-50%)", color:"rgba(160,155,135,0.4)" }} size={16} />
+          <input
+            type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search vessels by email or true name..."
-style={{ width:"100%", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(212,169,74,0.1)", borderRadius:"12px", padding:"10px 10px 10px 44px", outline:"none", fontSize:"12px", color:"#f0ede6", fontFamily:"var(--font-sans)" }}
+            aria-label="Search users"
+            placeholder="Search Disciples by email or name..."
+            style={{ width:"100%", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(212,169,74,0.1)", borderRadius:"12px", padding:"10px 40px 10px 44px", outline:"none", fontSize:"12px", color:"#f0ede6", fontFamily:"var(--font-sans)" }}
           />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              style={{ position:"absolute", right:"10px", top:"50%", transform:"translateY(-50%)", width:"24px", height:"24px", borderRadius:"50%", background:"rgba(212,169,74,0.1)", border:"1px solid rgba(212,169,74,0.2)", color:"#d4a94a", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+            >
+              <X size={12} />
+            </button>
+          )}
         </div>
-        <div className="flex gap-4 w-full md:w-auto">
-           <div style={{ padding:"10px 16px", borderRadius:"10px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(212,169,74,0.08)", display:"flex", alignItems:"center", gap:"8px", fontSize:"10px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.12em", color:"rgba(160,155,135,0.45)", cursor:"pointer", whiteSpace:"nowrap" }}>
-              <Filter size={16} />
-              Filter Auras
-           </div>
-        </div>
+        {query && (
+          <span style={{ padding:"10px 16px", borderRadius:"10px", background:"rgba(212,169,74,0.06)", border:"1px solid rgba(212,169,74,0.18)", fontSize:"11px", fontWeight:600, color:"#d4a94a", whiteSpace:"nowrap" }}>
+            {filteredUsers.length} match{filteredUsers.length !== 1 ? "es" : ""} for &ldquo;{query}&rdquo;
+          </span>
+        )}
       </div>
 
       <div style={{ background:"rgba(22,22,18,0.5)", border:"1px solid rgba(212,169,74,0.1)", borderRadius:"16px", overflow:"hidden" }}>
@@ -112,21 +141,43 @@ style={{ width:"100%", background:"rgba(255,255,255,0.02)", border:"1px solid rg
                   <span style={{ fontSize:"10px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.15em", color:u.role==="ADMIN" ? "#d4a94a" : "rgba(160,155,135,0.45)", padding:"3px 8px", borderRadius:"6px", background:u.role==="ADMIN" ? "rgba(212,169,74,0.1)" : "transparent" }}>{u.role}</span>
                 </td>
                 <td className="px-10 py-8">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(16,185,129,0.1)]">
-                     <CheckCircle2 size={12} /> ALIGNED
-                  </span>
+                  {u.isDisabled ? (
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-[9px] font-black uppercase tracking-widest">
+                       <Ban size={12} /> RESTRICTED
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                       <CheckCircle2 size={12} /> ALIGNED
+                    </span>
+                  )}
                 </td>
                 <td className="px-10 py-8">
                   <div className="flex items-center justify-center gap-4">
-                     <button 
-                       onClick={() => handleIntervene(u.id, 'Mail')}
-                       style={{ color:"#d4a94a" }}
+                     {u.email && (
+                       <a
+                         href={`mailto:${u.email}`}
+                         aria-label={`Email ${u.name || u.email}`}
+                         title="Send email"
+                         style={{ color:"#d4a94a", display:"flex", alignItems:"center" }}
+                       >
+                          <Mail size={14} />
+                       </a>
+                     )}
+                     <button
+                       onClick={() => updateUser(u.id, { role: u.role === "ADMIN" ? "USER" : "ADMIN" }, u.role === "ADMIN" ? "Demoted to Disciple." : "Elevated to Keeper (Admin).")}
+                       disabled={busyId === u.id}
+                       aria-label={u.role === "ADMIN" ? "Demote to user" : "Promote to admin"}
+                       title={u.role === "ADMIN" ? "Demote to user" : "Promote to admin"}
+                       style={{ width:"34px", height:"34px", background:"rgba(212,169,74,0.04)", border:"1px solid rgba(212,169,74,0.14)", borderRadius:"8px", display:"flex", alignItems:"center", justifyContent:"center", color:"#d4a94a", cursor: busyId === u.id ? "wait" : "pointer", opacity: busyId === u.id ? 0.5 : 1 }}
                      >
-                        <Mail size={14} />
+                        <ShieldCheck size={14} />
                      </button>
-                     <button 
-                       onClick={() => handleIntervene(u.id, 'Restriction')}
-style={{ width:"34px", height:"34px", background:"rgba(248,113,113,0.04)", border:"1px solid rgba(248,113,113,0.1)", borderRadius:"8px", display:"flex", alignItems:"center", justifyContent:"center", color:"rgba(248,113,113,0.45)", cursor:"pointer" }}
+                     <button
+                       onClick={() => updateUser(u.id, { isDisabled: !u.isDisabled }, u.isDisabled ? "Restriction lifted." : "Seeker restricted from the sanctum.")}
+                       disabled={busyId === u.id}
+                       aria-label={u.isDisabled ? "Lift restriction" : "Restrict account"}
+                       title={u.isDisabled ? "Lift restriction" : "Restrict account"}
+                       style={{ width:"34px", height:"34px", background:"rgba(248,113,113,0.04)", border:"1px solid rgba(248,113,113,0.1)", borderRadius:"8px", display:"flex", alignItems:"center", justifyContent:"center", color: u.isDisabled ? "#f87171" : "rgba(248,113,113,0.45)", cursor: busyId === u.id ? "wait" : "pointer", opacity: busyId === u.id ? 0.5 : 1 }}
                      >
                         <Ban size={14} />
                      </button>

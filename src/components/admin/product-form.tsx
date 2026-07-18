@@ -30,6 +30,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
   const [isUploading, setIsUploading] = useState(false);
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const router = useRouter();
 
@@ -43,6 +44,16 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
       })
       .catch(console.error);
   }, []);
+
+  // The <select> mounts before its options exist, so the browser discards
+  // the registered category value. Re-apply it AFTER the options render
+  // (an effect keyed on `categories` runs post-render, avoiding the race).
+  useEffect(() => {
+    if (categories.length > 0 && initialData?.categoryId) {
+      setValue("categoryId", initialData.categoryId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories]);
 
   const {
     register,
@@ -137,7 +148,14 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
   };
 
   const handleDelete = async () => {
-    if (!productId || !confirm("Are you sure you want to delete this product?")) return;
+    if (!productId) return;
+    // Two-step confirm: first click arms the button, second click deletes
+    if (!confirmingDelete) {
+      setConfirmingDelete(true);
+      setTimeout(() => setConfirmingDelete(false), 3500);
+      return;
+    }
+    setConfirmingDelete(false);
 
     try {
       const response = await fetch(`/api/products/${productId}`, {
@@ -173,14 +191,14 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
               <Info size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-serif italic text-white">Artifact <span className="text-gold">Essence</span></h2>
-              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-zinc-500 mt-1">Core Identity & Revelation</p>
+              <h2 className="text-xl font-serif italic text-white">Product <span className="text-gold">Details</span></h2>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500 mt-1">Name, category &amp; description</p>
             </div>
           </div>
           
           <div className="space-y-8">
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Vessel Name</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">Product Name</label>
               <input 
                 {...register("name")}
                 className={`w-full bg-black/40 border ${errors.name ? 'border-red-500/50' : 'border-white/5'} rounded-2xl p-5 text-white placeholder:text-zinc-800 focus:outline-none focus:border-gold/30 transition-all shadow-2xl font-light tracking-wide`}
@@ -190,7 +208,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Spiritual Category</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">Category</label>
               {!isAddingCategory ? (
                 <div className="flex gap-4">
                   <select
@@ -240,7 +258,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Description of Presence</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">Description</label>
               <textarea 
                 {...register("description")}
                 rows={3}
@@ -250,7 +268,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Spiritual Essence Details</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">Spiritual Essence <span className="text-zinc-700 normal-case tracking-normal">(shown on the product page)</span></label>
               <textarea 
                 {...register("spiritualEssence")}
                 rows={3}
@@ -260,7 +278,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Physical Specifications</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">Specifications</label>
               <textarea 
                 {...register("specifications")}
                 rows={3}
@@ -279,14 +297,14 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
               <Layers size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-serif italic text-white">Manifestation <span className="text-gold">Exchange</span></h2>
-              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-zinc-500 mt-1">Value & Availability in the Realm</p>
+              <h2 className="text-xl font-serif italic text-white">Pricing <span className="text-gold">&amp; Stock</span></h2>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500 mt-1">Price &amp; available inventory</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Price (₹)</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">Price (₹)</label>
               <div className="relative group/price">
                 <span style={{ position:"absolute", left:"14px", top:"50%", transform:"translateY(-50%)", fontSize:"16px", color:"rgba(160,155,135,0.45)", fontFamily:"sans-serif" }}>₹</span>
                 <input 
@@ -301,7 +319,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] ml-1">Manifested Units</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">Stock (Units)</label>
               <input 
                 {...register("stock", { valueAsNumber: true })}
                 type="number"
@@ -322,8 +340,8 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
                   <ImageIcon size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-serif italic text-white">Visual <span className="text-gold">Projection</span></h2>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-zinc-500 mt-1">Artwork of the Item</p>
+                  <h2 className="text-xl font-serif italic text-white">Product <span className="text-gold">Image</span></h2>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500 mt-1">Shown across the store</p>
                 </div>
               </div>
               
@@ -337,7 +355,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
                   {isUploading ? (
                     <div className="flex flex-col items-center gap-4 relative z-10">
                       <Loader2 className="animate-spin text-gold" size={32} />
-                      <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.3em]">Harmonizing...</p>
+                      <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Uploading…</p>
                     </div>
                   ) : watch("imageUrl") ? (
                     <>
@@ -349,7 +367,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
                         className="object-cover transition-transform duration-1000 group-hover:scale-110" 
                       />
                       <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-sm">
-                        <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-gold">Modify Projection</span>
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Change Image</span>
                       </div>
                     </>
                   ) : (
@@ -357,8 +375,8 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
                       <div className="h-16 w-16 glass rounded-2xl flex items-center justify-center mb-6 border border-white/5 group-hover:scale-110 group-hover:border-gold/20 transition-all duration-700">
                         <ImageIcon className="text-zinc-600 group-hover:text-gold transition-colors duration-700" size={24} />
                       </div>
-                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.3em]">Reveal Artwork</p>
-                      <p className="text-[8px] text-zinc-700 mt-2 font-bold uppercase tracking-widest">Divine Resolution (Max 5MB)</p>
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Click to Upload Image</p>
+                      <p className="text-[8px] text-zinc-700 mt-2 font-bold uppercase tracking-widest">PNG or JPG · Max 5MB</p>
                     </div>
                   )}
                   <input 
@@ -400,11 +418,11 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.3em] ml-1">Universal Path</label>
-                  <input 
+                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1">Image URL</label>
+                  <input
                     {...register("imageUrl")}
                     className={`w-full bg-black/40 border ${errors.imageUrl ? 'border-red-500/50' : 'border-white/5'} rounded-xl p-4 text-[10px] text-white focus:outline-none focus:border-gold/20 transition-all font-mono opacity-60 hover:opacity-100 focus:opacity-100`}
-                    placeholder="/sacred/artifact.jpg"
+                    placeholder="/uploads/your-image.png"
                   />
                   {errors.imageUrl && <p className="text-red-500 text-[9px] mt-1 ml-1 font-bold uppercase tracking-widest">{errors.imageUrl.message}</p>}
                 </div>
@@ -414,9 +432,9 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
             <div className="pt-10 border-t border-white/5 space-y-10">
                <div className="flex items-center justify-between group/toggle cursor-pointer" onClick={() => setValue("isActive", !watch("isActive"), { shouldValidate: true })}>
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors">Manifested State</span>
-                    <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-[0.4em] mt-1 group-hover:text-gold/60 transition-colors">
-                      {watch("isActive") ? "Visible in Realm" : "Hidden in Ether"}
+                    <span className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors">Visibility</span>
+                    <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-[0.2em] mt-1 group-hover:text-gold/60 transition-colors">
+                      {watch("isActive") ? "Visible in store" : "Hidden from store"}
                     </span>
                   </div>
                   <div
@@ -438,7 +456,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
                   ) : (
                     <>
                       <Save size={18} className="group-hover:scale-110 transition-transform duration-500" />
-                      <span>{isEdit ? "Harden Modification" : "Release to World"}</span>
+                      <span>{isEdit ? "Save Changes" : "Create Product"}</span>
                     </>
                   )}
                 </button>
@@ -450,7 +468,7 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
                     className="w-full bg-red-500/5 text-red-500/60 py-5 rounded-2xl font-bold text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-red-500 hover:text-white border border-red-500/10 hover:border-red-500 transition-all duration-500 group active:scale-95"
                   >
                     <Trash2 size={18} className="group-hover:rotate-12 transition-transform duration-500" />
-                    <span>Return to Void</span>
+                    <span>{confirmingDelete ? "Click Again to Confirm" : "Delete Product"}</span>
                   </button>
                 )}
               </div>
@@ -460,9 +478,9 @@ export default function ProductForm({ initialData, productId, isEdit }: ProductF
               <div style={{ padding:"20px", borderRadius:"16px", border:`1px solid ${success ? "rgba(72,187,120,0.25)" : "rgba(248,113,113,0.25)"}`, display:"flex", alignItems:"flex-start", gap:"12px", background:success ? "rgba(72,187,120,0.06)" : "rgba(248,113,113,0.06)", color:success ? "#48bb78" : "#f87171", animation:"fadeIn 0.3s ease-out" }}>
                 {success ? <CheckCircle2 size={20} className="shrink-0 mt-0.5" /> : <AlertCircle size={20} className="shrink-0 mt-0.5" />}
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{success ? "Divine Success" : "Disturbance Found"}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{success ? "Saved" : "Something went wrong"}</span>
                   <span className="text-[10px] font-medium leading-relaxed opacity-80">
-                    {success ? `The artifact has been successfully ${isEdit ? 'refined' : 'manifested'}.` : error}
+                    {success ? `Product ${isEdit ? 'updated' : 'created'} successfully. Returning to the product list…` : error}
                   </span>
                 </div>
               </div>

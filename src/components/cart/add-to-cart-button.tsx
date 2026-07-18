@@ -1,16 +1,25 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 
 interface AddToCartButtonProps {
   productId: string;
   variant?: "primary" | "minimal";
+  quantity?: number;
 }
 
-export function AddToCartButton({ productId, variant = "primary" }: AddToCartButtonProps) {
+export function AddToCartButton({ productId, variant = "primary", quantity = 1 }: AddToCartButtonProps) {
   const [showToast, setShowToast] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsSignIn, setNeedsSignIn] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const showError = (message: string, signIn = false) => {
+    setError(message);
+    setNeedsSignIn(signIn);
+    setTimeout(() => { setError(null); setNeedsSignIn(false); }, 4000);
+  };
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -21,21 +30,57 @@ export function AddToCartButton({ productId, variant = "primary" }: AddToCartBut
         const res = await fetch("/api/cart/add", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId, quantity: 1 }),
+          body: JSON.stringify({ productId, quantity }),
         });
+        if (res.status === 401) {
+          showError("Sign in to add items to your cart", true);
+          return;
+        }
         if (!res.ok) {
           const data = await res.json().catch(() => null);
-          setError(data?.error ?? "Failed to add to cart.");
+          showError(data?.error ?? "Failed to add to cart.");
           return;
         }
         setShowToast(true);
         window.dispatchEvent(new CustomEvent("cart-updated"));
         setTimeout(() => setShowToast(false), 2800);
       } catch {
-        setError("Something went wrong.");
+        showError("Something went wrong.");
       }
     });
   };
+
+  const errorToast = error ? (
+    <div style={{
+      position: "fixed", top: "84px", right: "20px", zIndex: 9999,
+      background: "rgba(16,16,14,0.97)",
+      border: "1px solid rgba(248,113,113,0.3)",
+      borderRadius: "12px",
+      padding: "14px 18px",
+      display: "flex", alignItems: "center", gap: "12px",
+      boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
+      backdropFilter: "blur(16px)",
+      animation: "fadeIn 0.25s ease-out",
+    }}>
+      <div style={{
+        width: "32px", height: "32px", borderRadius: "8px",
+        background: "rgba(248,113,113,0.1)",
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      }}>
+        <span className="material-symbols-outlined" style={{ fontSize: "17px", color: "#f87171" }}>
+          {needsSignIn ? "lock" : "error"}
+        </span>
+      </div>
+      <div>
+        <p style={{ fontSize: "12px", color: "rgba(200,195,178,0.85)", margin: 0 }}>{error}</p>
+        {needsSignIn && (
+          <Link href="/login" style={{ fontSize: "11px", fontWeight: 700, color: "#d4a94a", textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            Sign In →
+          </Link>
+        )}
+      </div>
+    </div>
+  ) : null;
 
   const toast = showToast ? (
     <div style={{
@@ -67,6 +112,7 @@ export function AddToCartButton({ productId, variant = "primary" }: AddToCartBut
     return (
       <>
         {toast}
+        {errorToast}
         <button
           onClick={handleClick}
           disabled={isPending}
@@ -101,6 +147,7 @@ export function AddToCartButton({ productId, variant = "primary" }: AddToCartBut
   return (
     <>
       {toast}
+      {errorToast}
       <button
         onClick={handleClick}
         disabled={isPending}
@@ -123,7 +170,6 @@ export function AddToCartButton({ productId, variant = "primary" }: AddToCartBut
         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>shopping_bag</span>
         {isPending ? "Adding…" : "Add to Cart"}
       </button>
-      {error && <p style={{ fontSize: "11px", color: "#f87171", marginTop: "6px", textAlign: "center" }}>{error}</p>}
     </>
   );
 }

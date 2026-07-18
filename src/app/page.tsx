@@ -1,23 +1,21 @@
 import Link from 'next/link';
 import Image from "next/image";
 import { ProductService } from "@/modules/products/service";
-import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { ReviewService } from "@/modules/reviews/service";
+import { ProductCardStitch } from "@/components/products/product-card";
 import prisma from "@/lib/prisma";
-import { Category } from "@prisma/client";
+import { Category, Product } from "@prisma/client";
 import { NewsletterForm } from "@/components/home/newsletter-form";
 
 export const dynamic = "force-dynamic";
 
-type FeaturedProduct = {
-  id: string;
-  name: string;
-  price: number | { toString: () => string };
-  description: string | null;
-  imageUrl: string | null;
-};
-
 export default async function HomePage() {
-  const featuredProducts = await ProductService.getProducts({ isActive: true, limit: 6 });
+  // Fetch extra, then float in-stock items to the front of the featured strip
+  const featuredPool: Product[] = await ProductService.getProducts({ isActive: true, limit: 12 });
+  const featuredProducts = [...featuredPool]
+    .sort((a, b) => (a.stock === 0 ? 1 : 0) - (b.stock === 0 ? 1 : 0))
+    .slice(0, 6);
+  const ratings = await ReviewService.getAggregates(featuredProducts.map((p) => p.id));
   const categories = await prisma.category.findMany({ take: 6, orderBy: { name: "asc" } });
 
   return (
@@ -268,15 +266,8 @@ export default async function HomePage() {
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px" }}>
-          {featuredProducts.slice(0, 6).map((product: FeaturedProduct) => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              image={product.imageUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuBfdsGV6aNSxqvazDqkT7tcstkj-L8oBUe0ArkfkL_J5tK7luTCM_4wySIyuD9UHwMC-s0nSNtfVbkjLMGeJh6orSysXUnN2IupfunTPLUsRWpn_oUQ-XiMJf0vlu1kUeJWz8zam4yxxQeRmen33focXfDToKydsGGagolfpwG23ZawDPMFO_fja2VkIzAfVDlq9ZAE0641Ymy3cSzBwbI6R-FbGRunWxNcH6Gz2qtWECZcSBDN5nZj2d55dksrBVFO3-B05fvwoV4"}
-              title={product.name}
-              price={`₹${parseFloat(product.price.toString()).toFixed(0)}`}
-              desc={product.description || "Authentic sacred item from the Himalayas."}
-            />
+          {featuredProducts.slice(0, 6).map((product) => (
+            <ProductCardStitch key={product.id} product={product} rating={ratings[product.id]} />
           ))}
         </div>
       </section>
@@ -406,102 +397,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer style={{ borderTop: "1px solid rgba(212,169,74,0.07)", padding: "clamp(48px,6vw,88px) clamp(16px,4vw,48px) clamp(24px,3vw,40px)", background: "#0a0908" }}>
-        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "clamp(24px,4vw,60px)", marginBottom: "clamp(32px,4vw,60px)" }}>
-            {/* Brand */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <Link href="/" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none" }}>
-                <div style={{ width: "36px", height: "36px", position: "relative", flexShrink: 0 }}>
-                  <Image src="/images/bg-removed-logo.png" alt="Akaal" fill style={{ objectFit: "contain" }} />
-                </div>
-                <div>
-                  <span style={{ fontFamily: "var(--font-serif)", fontSize: "17px", fontWeight: 700, letterSpacing: "0.14em", color: "#f0ede6", display: "block" }}>AKAAL</span>
-                  <span style={{ fontSize: "7px", letterSpacing: "0.24em", textTransform: "uppercase", color: "rgba(212,169,74,0.5)" }}>Eternal Sanctuary</span>
-                </div>
-              </Link>
-              <p style={{ fontSize: "13px", fontWeight: 300, lineHeight: 1.7, color: "rgba(160,155,135,0.4)", maxWidth: "260px" }}>
-                Dedicated to bringing sacred ancient wisdom into the modern home through ethically sourced spiritual artifacts.
-              </p>
-              <div style={{ display: "flex", gap: "8px" }}>
-                {["language", "mail", "share"].map(icon => (
-                  <a key={icon} href="#" style={{ width: "34px", height: "34px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", color: "rgba(200,195,178,0.5)", transition: "all 0.2s" }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>{icon}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-            <FooterColumn title="Shop" links={categories.map((c: Category) => ({ label: c.name, href: `/products?category=${c.id}` }))} />
-            <FooterColumn title="Explore" links={[
-              { label: "Our Story", href: "/about" },
-              { label: "Wishlist", href: "/wishlist" },
-              { label: "Dashboard", href: "/dashboard" },
-            ]} />
-            <FooterColumn title="Support" links={[
-              { label: "My Orders", href: "/orders" },
-              { label: "Settings", href: "/settings" },
-              { label: "Contact Us", href: "mailto:support@akaal.com" },
-            ]} />
-          </div>
-          <div style={{ paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
-            <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.35)" }}>© 2026 Akaal Spiritual Arts. All rights reserved.</p>
-            <div style={{ display: "flex", gap: "20px" }}>
-              {["Privacy Policy", "Terms of Service", "Support"].map(item => (
-                <a key={item} href="#" style={{ fontSize: "11px", color: "rgba(160,155,135,0.35)", textDecoration: "none", transition: "color 0.2s" }}>{item}</a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+      {/* Shared <Footer /> is rendered by the root layout */}
     </div>
   );
 }
 
-function ProductCard({ id, image, title, price, desc }: { id: string; image: string; title: string; price: string; desc: string }) {
-  return (
-    <div className="transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(0,0,0,0.5)] hover:border-[rgba(212,169,74,0.22)]" style={{
-      background: "#111009",
-      border: "1px solid rgba(212,169,74,0.09)",
-      borderRadius: "14px",
-      overflow: "hidden",
-      display: "flex", flexDirection: "column",
-      transition: "transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease",
-      cursor: "pointer", position: "relative",
-    }}>
-      <Link href={`/products/${id}`} style={{ aspectRatio: "1", position: "relative", overflow: "hidden", background: "#1a1814", display: "block" }}>
-        <Image src={image} alt={title} fill className="object-cover transition-transform duration-500" sizes="(max-width:768px) 100vw, 33vw" />
-      </Link>
-      <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
 
-        <Link href={`/products/${id}`} style={{ textDecoration: "none" }}>
-          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "19px", fontWeight: 600, lineHeight: 1.25, color: "#f0ede6", margin: 0 }}>{title}</h3>
-        </Link>
-        <p style={{ fontSize: "12.5px", fontWeight: 300, lineHeight: 1.65, color: "rgba(200,195,178,0.55)", margin: 0 }}>
-          {desc.slice(0, 75)}{desc.length > 75 ? "…" : ""}
-        </p>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: "14px", borderTop: "1px solid rgba(212,169,74,0.07)" }}>
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: "21px", fontWeight: 600, color: "#d4a94a" }}>{price}</span>
-          <AddToCartButton productId={id} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-      <h5 style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(240,237,230,0.8)", margin: 0 }}>{title}</h5>
-      <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", padding: 0, margin: 0 }}>
-        {links.map(link => (
-          <li key={link.label}>
-            <Link href={link.href} style={{ fontSize: "13px", fontWeight: 300, color: "rgba(160,155,135,0.4)", textDecoration: "none", transition: "color 0.2s" }}>
-              {link.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}

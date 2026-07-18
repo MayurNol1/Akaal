@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { NotificationBell } from "./notification-bell";
+import { Logo } from "@/components/layout/logo";
 
 const navItems = [
   { href: "/admin", icon: "grid_view", label: "Overview", exact: true },
@@ -57,9 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div style={{ minHeight: "100vh", background: "#10100e", color: "#f0ede6", display: "flex", overflow: "hidden" }}>
       <aside style={{ width: sidebarCollapsed ? "64px" : "240px", flexShrink: 0, background: "#161612", borderRight: "1px solid rgba(212,169,74,0.1)", display: "flex", flexDirection: "column", transition: "width 0.3s cubic-bezier(.4,0,.2,1)", overflow: "hidden", position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 40 }}>
         <div style={{ height: "64px", display: "flex", alignItems: "center", padding: sidebarCollapsed ? "0 16px" : "0 20px", borderBottom: "1px solid rgba(212,169,74,0.1)", gap: "12px", flexShrink: 0 }}>
-          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(212,169,74,0.12)", border: "1px solid rgba(212,169,74,0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 48 48" fill="#d4a94a"><path d="M8.578 8.578C5.528 11.628 3.451 15.515 2.61 19.745 1.768 23.976 2.2 28.361 3.85 32.346 5.501 36.331 8.297 39.738 11.883 42.134 15.47 44.53 19.686 45.81 24 45.81c4.313 0 8.53-1.28 12.117-3.676 3.586-2.396 6.382-5.803 8.033-9.788 1.65-3.985 2.082-8.37 1.241-12.601-.842-4.23-2.919-8.117-5.969-11.167L24 24 8.578 8.578Z" /></svg>
-          </div>
+          <Logo size={32} iconOnly href="/admin" />
           {!sidebarCollapsed && <div><span style={{ fontFamily: "var(--font-serif), 'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 700, letterSpacing: "0.1em", color: "#d4a94a" }}>AKAAL</span><span style={{ fontSize: "9px", display: "block", color: "rgba(160,155,135,0.45)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Admin Panel</span></div>}
         </div>
         <nav style={{ flex: 1, padding: "16px 10px", display: "flex", flexDirection: "column", gap: "4px", overflowY: "auto" }}>
@@ -87,14 +85,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <main style={{ flex: 1, display: "flex", flexDirection: "column", marginLeft: sidebarCollapsed ? "64px" : "240px", transition: "margin-left 0.3s cubic-bezier(.4,0,.2,1)", minHeight: "100vh", overflowY: "auto" }}>
         <header style={{ height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px,3vw,40px)", background: "rgba(16,16,14,0.9)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(212,169,74,0.08)", position: "sticky", top: 0, zIndex: 30, gap: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} style={{ width: "36px", height: "36px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(212,169,74,0.1)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(160,155,135,0.45)", transition: "all 0.18s" }}><span className="material-symbols-outlined" style={{ fontSize: "16px" }}>menu</span></button>
+            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} style={{ width: "36px", height: "36px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(212,169,74,0.1)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(160,155,135,0.45)", transition: "all 0.18s" }}><span className="material-symbols-outlined" style={{ fontSize: "16px" }}>menu</span></button>
             <form onSubmit={handleGlobalSearch} style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(212,169,74,0.04)", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "8px", padding: "0 12px", height: "36px" }}>
               <span className="material-symbols-outlined" style={{ fontSize: "15px", color: "rgba(160,155,135,0.45)" }}>search</span>
               <input type="text" value={globalSearch} onChange={e => setGlobalSearch(e.target.value)} placeholder="Search products, orders…" style={{ background: "none", border: "none", outline: "none", fontSize: "12px", color: "#f0ede6", width: "200px", fontFamily: "var(--font-sans)" }} />
             </form>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <NotificationBell />
             <Link href="/" style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", textDecoration: "none", padding: "6px 12px", borderRadius: "8px", border: "1px solid rgba(212,169,74,0.08)", transition: "all 0.18s" }}>← Back to Site</Link>
           </div>
         </header>

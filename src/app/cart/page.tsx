@@ -3,6 +3,9 @@ import { auth } from "@/auth";
 import { CartService } from "@/modules/cart/service";
 import type { CartWithItems } from "@/modules/cart/types";
 import { CartItems } from "@/components/cart/cart-items";
+import { CouponForm } from "@/components/cart/coupon-form";
+import { calculateOrderTotals, FREE_SHIPPING_THRESHOLD } from "@/lib/pricing";
+import { CouponService } from "@/modules/coupons/service";
 
 export const dynamic = "force-dynamic";
 
@@ -52,14 +55,14 @@ export default async function CartPage() {
 
   const cart = (await CartService.getCart(session.user.id)) as CartWithItems | null;
   const items = cart?.items ?? [];
-  const subtotal = items.reduce((sum: number, item) => {
-    const priceNumber = Number(item.product.price);
-    return sum + priceNumber * item.quantity;
-  }, 0);
-  const freeShippingThreshold = 999;
-  const shipping = subtotal >= freeShippingThreshold ? 0 : 99;
-  const tax = subtotal * 0.05;
-  const total = subtotal + shipping + tax;
+  const coupon = await CouponService.getUsableCoupon(
+    (cart as { couponCode?: string | null } | null)?.couponCode
+  );
+  const { subtotal, discount, shipping, tax, total } = calculateOrderTotals(
+    items.map((item) => ({ price: item.product.price, quantity: item.quantity })),
+    coupon?.discountPercent ?? 0
+  );
+  const freeShippingThreshold = FREE_SHIPPING_THRESHOLD;
 
   return (
     <div style={{ background: "#10100e", color: "#f0ede6", minHeight: "100vh", paddingTop: "72px" }}>
@@ -67,7 +70,7 @@ export default async function CartPage() {
       {/* Promo Bar */}
       <div style={{
         background: "#1c1c15",
-        padding: "14px 60px",
+        padding: "14px clamp(16px,4vw,60px)",
         textAlign: "center", fontSize: "12px",
         color: "rgba(200,195,178,0.65)",
         borderBottom: "1px solid rgba(212,169,74,0.1)",
@@ -116,7 +119,7 @@ export default async function CartPage() {
             }}>Browse Collections</Link>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "32px", alignItems: "start" }}>
+          <div className="layout-split">
 
             {/* Cart Items */}
             <div>
@@ -153,9 +156,10 @@ export default async function CartPage() {
                 {/* Summary rows */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
                   {[
-                    { label: "Subtotal", val: `₹${subtotal.toFixed(0)}` },
-                    { label: "Shipping", val: shipping === 0 ? "Free" : `₹${shipping.toFixed(0)}`, highlight: shipping === 0 },
-                    { label: "GST (5%)", val: `₹${tax.toFixed(0)}` },
+                    { label: "Subtotal", val: `₹${Math.round(subtotal).toLocaleString("en-IN")}` },
+                    ...(discount > 0 ? [{ label: `Coupon (${coupon?.code})`, val: `−₹${Math.round(discount).toLocaleString("en-IN")}`, highlight: true }] : []),
+                    { label: "Shipping", val: shipping === 0 ? "Free" : `₹${shipping.toLocaleString("en-IN")}`, highlight: shipping === 0 },
+                    { label: "GST (5%)", val: `₹${Math.round(tax).toLocaleString("en-IN")}` },
                   ].map(row => (
                     <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
                       <span style={{ color: "rgba(160,155,135,0.45)" }}>{row.label}</span>
@@ -168,30 +172,11 @@ export default async function CartPage() {
 
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "24px" }}>
                   <span style={{ fontSize: "14px", fontWeight: 700, color: "#f0ede6" }}>Total</span>
-                  <span style={{ fontFamily: "var(--font-serif)", fontSize: "26px", fontWeight: 700, color: "#d4a94a" }}>₹{total.toFixed(0)}</span>
+                  <span style={{ fontFamily: "var(--font-serif)", fontSize: "26px", fontWeight: 700, color: "#d4a94a" }}>₹{Math.round(total).toLocaleString("en-IN")}</span>
                 </div>
 
                 {/* Coupon */}
-                <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
-                  <input
-                    type="text"
-                    placeholder="Coupon code"
-                    style={{
-                      flex: 1, padding: "10px 12px",
-                      background: "rgba(212,169,74,0.03)",
-                      border: "1px solid rgba(212,169,74,0.1)",
-                      borderRadius: "8px", color: "#f0ede6",
-                      fontSize: "12px", outline: "none",
-                      fontFamily: "var(--font-sans)",
-                    }}
-                  />
-                  <button style={{
-                    padding: "10px 14px",
-                    background: "transparent", color: "#d4a94a",
-                    border: "1px solid rgba(212,169,74,0.22)",
-                    borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 700,
-                  }}>Apply</button>
-                </div>
+                <CouponForm appliedCode={coupon?.code ?? null} discount={discount} />
 
                 {/* CTA */}
                 <Link href="/checkout" style={{

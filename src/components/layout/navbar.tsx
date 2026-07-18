@@ -3,14 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { CartPlaceholder } from "@/components/cart/cart-placeholder";
 import { WishlistCount } from "@/components/products/wishlist-count";
+import { Logo } from "@/components/layout/logo";
 import { useState, useEffect } from "react";
 
 export function Navbar() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentQuery = searchParams?.get("query") ?? "";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -25,7 +28,11 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/register");
+  const isAuthPage =
+    pathname?.startsWith("/login") ||
+    pathname?.startsWith("/register") ||
+    pathname?.startsWith("/forgot-password") ||
+    pathname?.startsWith("/reset-password");
   const isManagementPage = pathname?.startsWith("/admin");
 
   if (isAuthPage || isManagementPage) return null;
@@ -66,32 +73,11 @@ export function Navbar() {
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: "24px",
         }}>
           {/* Logo */}
-          <Link href="/" style={{
-            display: "flex", alignItems: "center", gap: "10px", textDecoration: "none",
-            transition: "opacity 0.2s",
-          }}>
-            <div style={{
-              width: "36px", height: "36px",
-              background: "rgba(212,169,74,0.12)",
-              border: "1px solid rgba(212,169,74,0.12)",
-              borderRadius: "10px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "16px",
-            }}>
-              <svg width="20" height="20" viewBox="0 0 48 48" fill="#d4a94a">
-                <path d="M8.578 8.578C5.528 11.628 3.451 15.515 2.61 19.745 1.768 23.976 2.2 28.361 3.85 32.346 5.501 36.331 8.297 39.738 11.883 42.134 15.47 44.53 19.686 45.81 24 45.81c4.313 0 8.53-1.28 12.117-3.676 3.586-2.396 6.382-5.803 8.033-9.788 1.65-3.985 2.082-8.37 1.241-12.601-.842-4.23-2.919-8.117-5.969-11.167L24 24 8.578 8.578Z"/>
-              </svg>
-            </div>
-            <span style={{
-              fontFamily: "var(--font-serif), 'Cormorant Garamond', serif",
-              fontSize: "18px", fontWeight: 700,
-              letterSpacing: "0.12em",
-              color: "#f0ede6",
-            }}>AKAAL</span>
-          </Link>
+          <Logo />
 
-          {/* Desktop nav links */}
-          <div style={{ display: "flex", alignItems: "center", gap: "32px" }} className="hidden md:flex">
+          {/* Desktop nav links — display is controlled by the classes only
+              (an inline display would override the responsive hiding) */}
+          <div style={{ alignItems: "center", gap: "32px" }} className="hidden md:flex">
             {navLinks.map(({ href, label }) => (
               <Link key={href} href={href} style={{
                 fontSize: "11px", fontWeight: 500,
@@ -110,7 +96,7 @@ export function Navbar() {
           {/* Actions */}
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             {/* Search */}
-            <form action="/products" className="hidden xl:flex" style={{
+            <form action="/products" className="hidden md:flex" style={{
               alignItems: "center",
               background: "rgba(212,169,74,0.04)",
               border: "1px solid rgba(212,169,74,0.1)",
@@ -119,6 +105,9 @@ export function Navbar() {
               <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "rgba(160,155,135,0.45)" }}>search</span>
               <input
                 name="query"
+                key={currentQuery}
+                defaultValue={currentQuery}
+                aria-label="Search products"
                 style={{
                   background: "none", border: "none", outline: "none",
                   fontSize: "12px", color: "#f0ede6", width: "130px",
@@ -133,7 +122,7 @@ export function Navbar() {
             <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.05)", margin: "0 4px" }} />
 
             {/* Wishlist */}
-            <Link href="/wishlist" style={{
+            <Link href="/wishlist" aria-label="Wishlist" style={{
               width: "40px", height: "40px", borderRadius: "10px",
               background: "transparent", border: "none",
               display: "flex", alignItems: "center", justifyContent: "center",
@@ -149,7 +138,7 @@ export function Navbar() {
             </Link>
 
             {/* Cart */}
-            <Link href="/cart" style={{
+            <Link href="/cart" aria-label="Cart" style={{
               width: "40px", height: "40px", borderRadius: "10px",
               background: "transparent", border: "none",
               display: "flex", alignItems: "center", justifyContent: "center",
@@ -172,7 +161,7 @@ export function Navbar() {
                 fontSize: "11px", fontWeight: 600,
                 letterSpacing: "0.12em", textTransform: "uppercase",
                 padding: "9px 20px", borderRadius: "8px",
-                textDecoration: "none",
+                textDecoration: "none", whiteSpace: "nowrap",
                 transition: "background 0.2s, transform 0.15s, box-shadow 0.2s",
                 display: "inline-flex", alignItems: "center",
                 marginLeft: "4px",
@@ -193,17 +182,21 @@ export function Navbar() {
                     background: "rgba(212,169,74,0.08)", border: "1px solid rgba(212,169,74,0.2)",
                   }}>Admin</Link>
                 )}
-                <Link href="/dashboard" style={{
+                <Link href="/dashboard" aria-label="Your dashboard" style={{
                   width: "34px", height: "34px", borderRadius: "50%",
                   border: "2px solid rgba(212,169,74,0.3)",
                   overflow: "hidden", cursor: "pointer", position: "relative",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "border-color 0.2s",
+                  background: "rgba(212,169,74,0.1)",
                 }}>
-                  <Image
-                    src={session.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDb9HxOmlluH2qUdJkJzGw0kBx49GCM0HpWK5hrJJE0zuqXExpKlTBAIgmxzvVgRKw6Ny46fqG9KIj4nLjOjB-ljAg2W6oXuI0cqCnyI1s9AgrsQRY0iHEb5g08VHRGOVW0iXh30dhVPSLnLCcyiOPTdtwdEKkinVMq3kovK6x2Vh18D0OxW5Mmkis_2TtVZpYMUI9fX2O5On1dIcDKT-3nbj64A56WkBYyMkz_dXUaIAvDxPLjRwbrDUqjz6p4febEV8uKJtS0sA4"}
-                    alt="Profile" fill className="object-cover"
-                  />
+                  {session.user?.image ? (
+                    <Image src={session.user.image} alt="Profile" fill className="object-cover" />
+                  ) : (
+                    <span style={{ fontFamily: "var(--font-serif)", fontSize: "14px", fontWeight: 700, color: "#d4a94a" }}>
+                      {(session.user?.name || "S")[0].toUpperCase()}
+                    </span>
+                  )}
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
@@ -225,13 +218,15 @@ export function Navbar() {
             {/* Mobile Toggle */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMobileMenuOpen}
               style={{
                 width: "40px", height: "40px", borderRadius: "10px",
                 background: "transparent", border: "none", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
+                alignItems: "center", justifyContent: "center",
                 color: "rgba(200,195,178,0.65)",
               }}
-              className="md:hidden"
+              className="flex md:hidden"
             >
               <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
                 {isMobileMenuOpen ? "close" : "menu"}
@@ -246,9 +241,33 @@ export function Navbar() {
         <div style={{
           position: "fixed", inset: 0, zIndex: 90,
           background: "rgba(16,16,14,0.97)", backdropFilter: "blur(20px)",
-          paddingTop: "80px", paddingLeft: "24px", paddingRight: "24px",
+          paddingTop: "80px", paddingLeft: "24px", paddingRight: "24px", paddingBottom: "40px",
+          overflowY: "auto",
         }} className="md:hidden">
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px", paddingTop: "32px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px", paddingTop: "24px" }}>
+            {/* Mobile search */}
+            <form action="/products" style={{
+              display: "flex", alignItems: "center", gap: "10px",
+              background: "rgba(212,169,74,0.05)",
+              border: "1px solid rgba(212,169,74,0.15)",
+              borderRadius: "12px", padding: "0 16px", height: "48px",
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "rgba(212,169,74,0.7)" }}>search</span>
+              <input
+                name="query"
+                key={currentQuery}
+                defaultValue={currentQuery}
+                aria-label="Search products"
+                placeholder="Search sacred artifacts…"
+                style={{
+                  flex: 1, background: "none", border: "none", outline: "none",
+                  fontSize: "15px", color: "#f0ede6",
+                  fontFamily: "var(--font-sans)",
+                }}
+                type="text"
+              />
+            </form>
+
             {navLinks.map(({ href, label }) => (
               <Link key={href} href={href} onClick={() => setIsMobileMenuOpen(false)} style={{
                 fontFamily: "var(--font-serif), 'Cormorant Garamond', serif",
@@ -258,6 +277,25 @@ export function Navbar() {
                 {label}
               </Link>
             ))}
+
+            {/* Quick access */}
+            <div style={{ display: "flex", gap: "10px" }}>
+              {[
+                { href: "/wishlist", icon: "favorite_border", label: "Wishlist" },
+                { href: "/cart", icon: "shopping_bag", label: "Cart" },
+              ].map(({ href, icon, label }) => (
+                <Link key={href} href={href} onClick={() => setIsMobileMenuOpen(false)} style={{
+                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  padding: "14px", borderRadius: "12px",
+                  background: "rgba(212,169,74,0.05)", border: "1px solid rgba(212,169,74,0.15)",
+                  color: "#f0ede6", fontSize: "13px", fontWeight: 600, textDecoration: "none",
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#d4a94a" }}>{icon}</span>
+                  {label}
+                </Link>
+              ))}
+            </div>
+
             <div style={{ height: "1px", background: "rgba(212,169,74,0.1)", margin: "8px 0" }} />
             {session ? (
               <button onClick={() => signOut()} style={{

@@ -18,11 +18,24 @@ async function getCart(userId: string) {
 }
 
 async function addToCart(userId: string, input: AddToCartInput) {
+  const product = await CartRepository.findProduct(input.productId);
+  if (!product || !product.isActive) {
+    throw new Error("This artifact is no longer available");
+  }
+
   const cart = await getOrCreateCart(userId);
   const existingItem = await CartRepository.findItem(cart.id, input.productId);
+  const requestedTotal = (existingItem?.quantity ?? 0) + input.quantity;
+
+  if (product.stock <= 0) {
+    throw new Error("This artifact is out of stock");
+  }
+  if (requestedTotal > product.stock) {
+    throw new Error(`Only ${product.stock} left in stock`);
+  }
 
   if (existingItem) {
-    return CartRepository.updateItem(existingItem.id, existingItem.quantity + input.quantity);
+    return CartRepository.updateItem(existingItem.id, requestedTotal);
   }
 
   return CartRepository.createItem(cart.id, input.productId, input.quantity);

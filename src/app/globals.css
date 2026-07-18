@@ -28,14 +28,106 @@
 
 html { scroll-behavior: smooth; }
 
+/* ── Accessibility: visible keyboard focus everywhere ── */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--gold, #d4a94a);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Responsive layout utilities (inline styles can't hold media queries) ── */
+
+/* Main content + fixed-width summary/sidebar column (cart, checkout) */
+.layout-split {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 32px;
+  align-items: start;
+}
+
+/* Sidebar + content row (products filter rail, dashboard nav) */
+.layout-sidebar {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+/* Product detail: gallery + info */
+.layout-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 5vw, 72px);
+  align-items: start;
+}
+
+/* Responsive card grids */
+.grid-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+.grid-related {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+/* Wide panel + fixed side rail (admin chart row) */
+.layout-chart {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .layout-chart { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 960px) {
+  .layout-split { grid-template-columns: 1fr; }
+  .layout-detail { grid-template-columns: 1fr; }
+  .layout-sidebar { flex-direction: column; }
+  .layout-sidebar > aside,
+  .layout-sidebar > .sidebar-rail {
+    width: 100% !important;
+    position: static !important;
+    border-right: none !important;
+    max-height: none !important;
+  }
+}
+
+/* Shimmer sweep used by admin forms (was referenced but never defined) */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.animate-shimmer { animation: shimmer 1.2s ease-in-out infinite; }
+
 body {
   color: var(--t1);
   background: var(--bg);
   font-family: var(--font-sans), "DM Sans", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.6;
   overflow-x: hidden;
   min-height: 100vh;
   background-image: radial-gradient(ellipse 800px 500px at 50% 0%, rgba(212,169,74,0.04) 0%, transparent 70%);
+}
+
+/* Form controls don't inherit fonts by default — without this, inputs
+   render in the OS font and look foreign to the rest of the site */
+input, select, textarea, button {
+  font-family: var(--font-sans), "DM Sans", system-ui, sans-serif;
 }
 
 /* Scrollbar */

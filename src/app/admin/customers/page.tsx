@@ -41,12 +41,12 @@ export default async function AdminCustomersPage() {
     return {
       id: user.id,
       name: user.name || "Unnamed Seeker",
-      email: user.email,
+      email: user.email ?? "—",
       createdAt: user.createdAt.toISOString(),
       ordersCount: user.orders.length,
       lifetimeValue,
       lastOrderAt: lastOrderAt ? lastOrderAt.toISOString() : null,
-      latestStatus: user.orders[0]?.status ?? "NO_ORDER",
+      latestStatus: user.orders[0]?.status ?? "No orders yet",
       segment: "New",
     };
   });

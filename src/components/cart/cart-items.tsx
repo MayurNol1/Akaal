@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import type { CartWithItems } from "@/modules/cart/types";
+import { FALLBACK_PRODUCT_IMAGE } from "@/constants/images";
 
 interface CartItemsProps {
   cart: CartWithItems;
@@ -42,7 +43,7 @@ export function CartItems({ cart }: CartItemsProps) {
       {cart.items.map((item) => {
         const priceNumber = Number(item.product.price);
         const lineTotal = priceNumber * item.quantity;
-        const imgSrc = item.product.imageUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuBfdsGV6aNSxqvazDqkT7tcstkj-L8oBUe0ArkfkL_J5tK7luTCM_4wySIyuD9UHwMC-s0nSNtfVbkjLMGeJh6orSysXUnN2IupfunTPLUsRWpn_oUQ-XiMJf0vlu1kUeJWz8zam4yxxQeRmen33focXfDToKydsGGagolfpwG23ZawDPMFO_fja2VkIzAfVDlq9ZAE0641Ymy3cSzBwbI6R-FbGRunWxNcH6Gz2qtWECZcSBDN5nZj2d55dksrBVFO3-B05fvwoV4";
+        const imgSrc = item.product.imageUrl || FALLBACK_PRODUCT_IMAGE;
 
         return (
           <div key={item.id} style={{

@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { errorResponse, successResponse } from "@/lib/api-responses";
+import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-responses";
 import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const session = await auth();
 
     if (session?.user?.role !== "ADMIN") {
-      return errorResponse("Unauthorized", 401);
+      return unauthorizedResponse();
     }
 
     const { name } = await req.json();

@@ -1,6 +1,7 @@
 import './globals.css';
 import { Providers } from "@/components/shared/providers";
 import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { auth } from "@/auth";
 import { Cormorant_Garamond, DM_Sans } from 'next/font/google';
 
@@ -41,11 +42,11 @@ export const metadata = {
     icon: [
       { url: "/images/BG_removed/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/images/BG_removed/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/images/BG_removed/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
     ],
     apple: "/images/BG_removed/apple-touch-icon.png",
     shortcut: "/images/BG_removed/favicon.ico",
   },
+  manifest: "/images/BG_removed/site.webmanifest",
 };
 
 export const dynamic = "force-dynamic";
@@ -69,6 +70,7 @@ export default async function RootLayout({
           <main>
             {children}
           </main>
+          <Footer />
         </Providers>
       </body>
     </html>

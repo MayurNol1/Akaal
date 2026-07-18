@@ -1,42 +1,45 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { getServerWishlist, getLocalLikedIds } from "@/lib/wishlist-client";
 
 export function WishlistCount() {
+  const { status } = useSession();
   const [count, setCount] = useState(0);
 
-  const updateCount = () => {
-    let likedCount = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith("liked_")) {
-          likedCount++;
-        }
-    }
-    setCount(likedCount);
-  };
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    updateCount();
+    let cancelled = false;
 
-    // Listen to our custom event for clicks across the app
-    window.addEventListener("wishlist-updated", updateCount);
-    
-    // Also listen to storage events (case where user has multiple tabs)
-    window.addEventListener("storage", updateCount);
-    
-    return () => {
-        window.removeEventListener("wishlist-updated", updateCount);
-        window.removeEventListener("storage", updateCount);
+    const updateCount = () => {
+      if (status === "authenticated") {
+        getServerWishlist().then((ids) => {
+          if (!cancelled) setCount(ids.size);
+        });
+      } else if (status === "unauthenticated") {
+        setCount(getLocalLikedIds().length);
+      }
     };
-  }, []);
+
+    updateCount();
+    window.addEventListener("wishlist-updated", updateCount);
+    // storage events cover guest likes changed in another tab
+    window.addEventListener("storage", updateCount);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("wishlist-updated", updateCount);
+      window.removeEventListener("storage", updateCount);
+    };
+  }, [status]);
 
   if (count === 0) return null;
 
   return (
-    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-black text-[8px] font-black border border-background-dark shadow-2xl animate-fade-in">
-      {count}
+    <span
+      style={{ position: "absolute", top: 0, right: 0, background: "#d4a94a", color: "#10100e", fontSize: "10px", fontWeight: 700, height: "16px", width: "16px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", transform: "translate(50%,-50%)" }}
+    >
+      {count > 99 ? "99+" : count}
     </span>
   );
 }

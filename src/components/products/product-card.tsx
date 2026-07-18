@@ -2,18 +2,28 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import { Product } from "@prisma/client";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { LikeButton } from "./like-button";
+import { Stars } from "./stars";
 
-const FALLBACK = "https://lh3.googleusercontent.com/aida-public/AB6AXuBfdsGV6aNSxqvazDqkT7tcstkj-L8oBUe0ArkfkL_J5tK7luTCM_4wySIyuD9UHwMC-s0nSNtfVbkjLMGeJh6orSysXUnN2IupfunTPLUsRWpn_oUQ-XiMJf0vlu1kUeJWz8zam4yxxQeRmen33focXfDToKydsGGagolfpwG23ZawDPMFO_fja2VkIzAfVDlq9ZAE0641Ymy3cSzBwbI6R-FbGRunWxNcH6Gz2qtWECZcSBDN5nZj2d55dksrBVFO3-B05fvwoV4";
+import { FALLBACK_PRODUCT_IMAGE as FALLBACK } from "@/constants/images";
 
-export function ProductCardStitch({ product }: { product: Product }) {
+interface ProductCardStitchProps {
+  product: Product;
+  /** Real review aggregate; stars are hidden when absent or empty. */
+  rating?: { average: number; count: number };
+}
+
+export function ProductCardStitch({ product, rating }: ProductCardStitchProps) {
+  // Swap to the local fallback when the stored imageUrl 404s
+  const [imgFailed, setImgFailed] = useState(false);
   const price = parseFloat(product.price.toString());
   const isNew = product.stock > 50;
   const isLow = product.stock > 0 && product.stock <= 10;
   const isSold = product.stock === 0;
-  const imgSrc = product.imageUrl || FALLBACK;
+  const imgSrc = !imgFailed && product.imageUrl ? product.imageUrl : FALLBACK;
   const isLocal = imgSrc.startsWith("/");
 
   return (
@@ -56,6 +66,7 @@ export function ProductCardStitch({ product }: { product: Product }) {
             style={{ objectFit: "cover", transition: "transform 0.45s ease" }}
             sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
             unoptimized={isLocal}
+            onError={() => setImgFailed(true)}
           />
         </Link>
 
@@ -100,13 +111,15 @@ export function ProductCardStitch({ product }: { product: Product }) {
           </p>
         )}
 
-        {/* Stars */}
-        <div style={{ display: "flex", alignItems: "center", gap: "2px", marginTop: "2px" }}>
-          {[1,2,3,4,5].map(i => (
-            <span key={i} className="material-symbols-outlined" style={{ fontSize: "11px", color: "#d4a94a", fontVariationSettings: "'FILL' 1" }}>star</span>
-          ))}
-          <span style={{ fontSize: "10px", color: "rgba(160,155,135,0.4)", marginLeft: "4px" }}>(42)</span>
-        </div>
+        {/* Stars — only when the product actually has reviews */}
+        {rating && rating.count > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+            <Stars value={rating.average} size={11} />
+            <span style={{ fontSize: "10px", color: "rgba(160,155,135,0.4)" }}>
+              {rating.average.toFixed(1)} ({rating.count})
+            </span>
+          </div>
+        )}
 
         {/* Footer — price + add to cart */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: "12px", borderTop: "1px solid rgba(212,169,74,0.07)" }}>

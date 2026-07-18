@@ -1,14 +1,16 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
+import { OrderStatusLabels, type OrderStatusType } from "@/constants/order-status";
+import { OrderStatusSelect } from "./status-select";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
-  Processing: { label: "Processing", color: "#ff9933",  bg: "rgba(255,153,51,0.08)",  border: "rgba(255,153,51,0.22)",  icon: "schedule" },
-  Shipped:    { label: "Shipped",    color: "#bb86fc",  bg: "rgba(187,134,252,0.08)", border: "rgba(187,134,252,0.22)", icon: "local_shipping" },
-  Delivered:  { label: "Delivered",  color: "#25e2f4",  bg: "rgba(37,226,244,0.08)",  border: "rgba(37,226,244,0.22)",  icon: "check_circle" },
-  Paid:       { label: "Paid",       color: "#d4a94a",  bg: "rgba(212,169,74,0.08)",  border: "rgba(212,169,74,0.22)",  icon: "payments" },
-  Cancelled:  { label: "Cancelled",  color: "#f87171",  bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.22)", icon: "cancel" },
+const STATUS_MAP: Record<OrderStatusType, { color: string; bg: string; border: string; icon: string }> = {
+  PENDING:   { color: "#ff9933",  bg: "rgba(255,153,51,0.08)",  border: "rgba(255,153,51,0.22)",  icon: "schedule" },
+  PAID:      { color: "#d4a94a",  bg: "rgba(212,169,74,0.08)",  border: "rgba(212,169,74,0.22)",  icon: "payments" },
+  SHIPPED:   { color: "#bb86fc",  bg: "rgba(187,134,252,0.08)", border: "rgba(187,134,252,0.22)", icon: "local_shipping" },
+  DELIVERED: { color: "#25e2f4",  bg: "rgba(37,226,244,0.08)",  border: "rgba(37,226,244,0.22)",  icon: "check_circle" },
+  CANCELLED: { color: "#f87171",  bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.22)", icon: "cancel" },
 };
 
 export default async function AdminOrdersPage() {
@@ -27,14 +29,10 @@ export default async function AdminOrdersPage() {
     items: val.items.map((i) => i.product.name).join(", "),
     price: `₹${parseFloat(val.total.toString()).toLocaleString("en-IN")}`,
     date: val.createdAt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-    status:
-      val.status === "PENDING"   ? "Processing" :
-      val.status === "SHIPPED"   ? "Shipped"    :
-      val.status === "DELIVERED" ? "Delivered"  :
-      val.status === "PAID"      ? "Paid"       : "Cancelled",
+    status: val.status as OrderStatusType,
   }));
 
-  const pending = orders.filter((o) => o.status === "Processing").length;
+  const pending = orders.filter((o) => o.status === "PENDING").length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
@@ -65,7 +63,7 @@ export default async function AdminOrdersPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(212,169,74,0.08)", background: "rgba(212,169,74,0.02)" }}>
-                {["Order ID", "Customer", "Items", "Amount", "Date", "Status"].map((h) => (
+                {["Order ID", "Customer", "Items", "Amount", "Date", "Status", "Update"].map((h) => (
                   <th key={h} style={{ padding: "14px 16px", textAlign: "left", fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(160,155,135,0.4)", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
@@ -73,7 +71,7 @@ export default async function AdminOrdersPage() {
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: "64px 24px", textAlign: "center" }}>
+                  <td colSpan={7} style={{ padding: "64px 24px", textAlign: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
                       <span className="material-symbols-outlined" style={{ fontSize: "48px", color: "rgba(212,169,74,0.12)" }}>receipt_long</span>
                       <p style={{ fontFamily: "var(--font-serif)", fontSize: "18px", color: "rgba(200,195,178,0.45)", fontStyle: "italic", margin: 0 }}>No orders yet</p>
@@ -82,7 +80,7 @@ export default async function AdminOrdersPage() {
                 </tr>
               ) : (
                 orders.map((order) => {
-                  const st = STATUS_MAP[order.status] || STATUS_MAP.Processing;
+                  const st = STATUS_MAP[order.status] || STATUS_MAP.PENDING;
                   return (
                     <tr 
                       key={order.id}
@@ -90,7 +88,7 @@ export default async function AdminOrdersPage() {
                       style={{ borderBottom: "1px solid rgba(212,169,74,0.04)" }}
                     >
                       <td style={{ padding: "14px 16px", fontFamily: "monospace", fontSize: "11px", color: "#d4a94a" }}>
-                        #{order.id.slice(0, 8).toUpperCase()}
+                        #{order.id.slice(-8).toUpperCase()}
                       </td>
                       <td style={{ padding: "14px 16px" }}>
                         <p style={{ fontFamily: "var(--font-serif)", fontSize: "13px", fontWeight: 600, color: "#f0ede6", margin: "0 0 2px" }}>{order.user}</p>
@@ -102,8 +100,11 @@ export default async function AdminOrdersPage() {
                       <td style={{ padding: "14px 16px" }}>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 10px", borderRadius: "99px", fontSize: "10px", fontWeight: 700, color: st.color, background: st.bg, border: `1px solid ${st.border}`, whiteSpace: "nowrap" }}>
                           <span className="material-symbols-outlined" style={{ fontSize: "12px", fontVariationSettings: "'FILL' 1" }}>{st.icon}</span>
-                          {st.label}
+                          {OrderStatusLabels[order.status]}
                         </span>
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <OrderStatusSelect orderId={order.id} status={order.status} />
                       </td>
                     </tr>
                   );

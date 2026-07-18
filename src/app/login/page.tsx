@@ -220,7 +220,7 @@ export default function LoginPage() {
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "-4px" }}>
-                  <Link href="#" style={{ fontSize: "11px", color: "rgba(212,169,74,0.5)", textDecoration: "none" }}>Forgot password?</Link>
+                  <Link href="/forgot-password" style={{ fontSize: "11px", color: "rgba(212,169,74,0.5)", textDecoration: "none" }}>Forgot password?</Link>
                 </div>
 
                 <div style={styles.divider}>
@@ -259,34 +259,13 @@ export default function LoginPage() {
                 Begin your journey.
               </h1>
               <p style={{ fontSize: "13px", color: "rgba(200,195,178,0.65)", marginBottom: "28px", lineHeight: 1.5 }}>
-                Create your account to track orders, save favourites, and access member discounts.
+                Create your account to track manifestations, save favourites, and access Disciple discounts.
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "14px" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                  <label style={styles.label}>First Name</label>
-                  <input type="text" placeholder="Priya" style={{ ...styles.input, paddingLeft: "14px" }} />
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                  <label style={styles.label}>Last Name</label>
-                  <input type="text" placeholder="Sharma" style={{ ...styles.input, paddingLeft: "14px" }} />
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                  <label style={styles.label}>Email Address</label>
-                  <div style={styles.inputWrap}>
-                    <span className="material-symbols-outlined" style={styles.inputIcon}>mail</span>
-                    <input type="email" placeholder="priya@gmail.com" style={styles.input} />
-                  </div>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                  <label style={styles.label}>Phone Number</label>
-                  <div style={styles.inputWrap}>
-                    <span className="material-symbols-outlined" style={styles.inputIcon}>phone</span>
-                    <input type="tel" placeholder="+91 98765 43210" style={styles.input} />
-                  </div>
-                </div>
-              </div>
+
+              <Link href="/register" style={{ ...styles.btn, display: "flex", textDecoration: "none" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>person_add</span>
+                Create Account with Email
+              </Link>
 
               <div style={styles.divider}>
                 <div style={styles.dividerLine} />
@@ -305,10 +284,6 @@ export default function LoginPage() {
                   Apple
                 </button>
               </div>
-              <Link href="/register" style={{ ...styles.btn, marginTop: "16px", display: "flex", textDecoration: "none" }}>
-                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>person_add</span>
-                Create Account
-              </Link>
               <p style={styles.switchPrompt}>
                 Already have an account?{" "}
                 <span style={styles.switchLink} onClick={() => setActiveTab("login")}>Sign in</span>
@@ -320,8 +295,8 @@ export default function LoginPage() {
 
       {/* Footer */}
       <footer style={{ position: "fixed", bottom: 0, right: 0, padding: "16px 60px", fontSize: "11px", color: "rgba(160,155,135,0.45)", display: "flex", gap: "16px" }}>
-        <Link href="#" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Privacy</Link>
-        <Link href="#" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Terms</Link>
+        <Link href="/privacy" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Privacy</Link>
+        <Link href="/terms" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Terms</Link>
         <span>© 2026 Akaal Spiritual Arts</span>
       </footer>
     </div>

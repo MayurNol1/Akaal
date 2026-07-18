@@ -2,8 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductService } from "@/modules/products/service";
-import { AddToCartButton } from "@/components/cart/add-to-cart-button";
-import { LikeButton } from "@/components/products/like-button";
+import { ReviewService } from "@/modules/reviews/service";
+import { QuantityAddToCart } from "./quantity-add-to-cart";
+import { ReviewForm } from "./review-form";
+import { Stars } from "@/components/products/stars";
+import { FALLBACK_PRODUCT_IMAGE } from "@/constants/images";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -23,6 +26,8 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
     return notFound();
   }
 
+  const { reviews, aggregate } = await ReviewService.getProductReviews(id);
+
   const price = parseFloat(product.price.toString()).toFixed(0);
   const isOutOfStock = product.stock === 0;
   const isLow = product.stock > 0 && product.stock <= 10;
@@ -41,7 +46,7 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
         </nav>
 
         {/* Product Section */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(32px,5vw,72px)", alignItems: "start" }}>
+        <div className="layout-detail">
 
           {/* ── GALLERY ── */}
           <div style={{ position: "sticky", top: "96px" }}>
@@ -58,7 +63,7 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
                 pointerEvents: "none",
               }} />
               <Image
-                src={product.imageUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuDhUoQEqkA_Om7CkOE64DQkjxkQPVHY0m6kCVlGMqoa27iyAsb1tNY2oEznkAdBjGDHarZRnkOZAClq7cDZbCbsnGcugUpKtKzddOm_AkZrOGrCdyfUIfDuT7oYFN35Qxpmw9O1_noM9nCLDQgNcar9aAOw4riOnly6gAJNlGux8KA0cg-AO9O5jSOpnO2splk7K60h0xzHKGPDHrCX42ZIxNDIynPEo-6tMLFHSVw9Mk6eYcDcfRFOcpztZCVX-xzCWlD_s3sYqRE"}
+                src={product.imageUrl || FALLBACK_PRODUCT_IMAGE}
                 alt={product.name}
                 fill
                 className="object-contain"
@@ -79,24 +84,6 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
               )}
             </div>
 
-            {/* Thumbnails */}
-            <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} style={{
-                  flex: 1, aspectRatio: "1 / 1",
-                  borderRadius: "10px", background: "#161612",
-                  border: i === 1 ? "2px solid #d4a94a" : "1px solid rgba(212,169,74,0.1)",
-                  overflow: "hidden", position: "relative", cursor: "pointer",
-                }}>
-                  <Image
-                    src={product.imageUrl || ""}
-                    alt="thumbnail"
-                    fill
-                    style={{ objectFit: "cover", opacity: i === 1 ? 1 : 0.5 }}
-                  />
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* ── INFO ── */}
@@ -124,12 +111,16 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
 
               {/* Stars */}
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-                <div style={{ display: "flex", gap: "2px" }}>
-                  {[1,2,3,4,5].map(i => (
-                    <span key={i} className="material-symbols-outlined" style={{ fontSize: "14px", color: "#d4a94a", fontVariationSettings: "'FILL' 1" }}>star</span>
-                  ))}
-                </div>
-                <span style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)" }}>4.8 (124 reviews)</span>
+                {aggregate.count > 0 ? (
+                  <>
+                    <Stars value={aggregate.average} size={14} />
+                    <span style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)" }}>
+                      {aggregate.average.toFixed(1)} ({aggregate.count} review{aggregate.count !== 1 ? "s" : ""})
+                    </span>
+                  </>
+                ) : (
+                  <span style={{ fontSize: "12px", color: "rgba(160,155,135,0.45)" }}>No reviews yet — be the first</span>
+                )}
               </div>
 
               {/* Price */}
@@ -176,21 +167,8 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
               ))}
             </div>
 
-            {/* Quantity */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{
-                display: "flex", alignItems: "center",
-                border: "1px solid rgba(212,169,74,0.1)", borderRadius: "10px", overflow: "hidden",
-              }}>
-                <button style={{ width: "36px", height: "44px", background: "none", border: "none", cursor: "pointer", color: "rgba(160,155,135,0.45)", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-                <span style={{ padding: "0 16px", fontSize: "14px", fontWeight: 600, color: "#f0ede6" }}>1</span>
-                <button style={{ width: "36px", height: "44px", background: "none", border: "none", cursor: "pointer", color: "rgba(160,155,135,0.45)", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
-              </div>
-              <div style={{ flex: 1 }}>
-                <AddToCartButton productId={product.id} />
-              </div>
-              <LikeButton productId={product.id} />
-            </div>
+            {/* Quantity + Add to cart */}
+            <QuantityAddToCart productId={product.id} maxStock={product.stock} price={Number(product.price)} />
 
             <div style={{ height: "1px", background: "rgba(212,169,74,0.1)" }} />
 
@@ -223,46 +201,91 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
 
         {/* ── REVIEWS ── */}
         <section style={{ marginTop: "80px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px", flexWrap: "wrap", gap: "12px" }}>
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "28px", fontWeight: 600, color: "#f0ede6", margin: 0 }}>
               Customer <em style={{ color: "#d4a94a" }}>Reviews</em>
+              {aggregate.count > 0 && (
+                <span style={{ fontSize: "14px", fontFamily: "var(--font-sans)", fontWeight: 400, color: "rgba(160,155,135,0.45)", marginLeft: "12px" }}>
+                  {aggregate.average.toFixed(1)} ★ · {aggregate.count}
+                </span>
+              )}
             </h2>
-            <button style={{
-              padding: "9px 20px", background: "#d4a94a", color: "#10100e",
-              border: "none", borderRadius: "8px", cursor: "pointer",
-              fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
-            }}>Write a Review</button>
+            <ReviewForm productId={product.id} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
-            {[
-              { name: "Priya S.", date: "15 Mar 2026", rating: 5, text: "Absolutely divine! The energy from this piece has transformed my meditation practice. Highly recommend." },
-              { name: "Rahul M.", date: "10 Mar 2026", rating: 5, text: "Beautifully crafted and authentic. Arrived well-packaged and energised. Worth every rupee." },
-              { name: "Ananya K.", date: "01 Mar 2026", rating: 4, text: "Great quality and fast shipping. The piece feels genuine and sacred. Very happy with my purchase." },
-            ].map((review, idx) => (
-              <div key={idx} style={{
-                padding: "20px", background: "#161612",
-                border: "1px solid rgba(212,169,74,0.08)", borderRadius: "12px",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                  <div style={{
-                    width: "36px", height: "36px", borderRadius: "50%",
-                    background: "rgba(212,169,74,0.12)", display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: 700, color: "#d4a94a",
-                  }}>{review.name[0]}</div>
-                  <div>
-                    <p style={{ fontSize: "12px", fontWeight: 700, color: "#f0ede6", margin: 0 }}>{review.name}</p>
-                    <p style={{ fontSize: "10px", color: "rgba(160,155,135,0.45)", margin: 0 }}>{review.date}</p>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: "2px", marginBottom: "10px" }}>
-                  {Array.from({ length: review.rating }).map((_, i) => (
-                    <span key={i} className="material-symbols-outlined" style={{ fontSize: "12px", color: "#d4a94a", fontVariationSettings: "'FILL' 1" }}>star</span>
-                  ))}
-                </div>
-                <p style={{ fontSize: "13px", color: "rgba(200,195,178,0.65)", lineHeight: 1.65, margin: 0 }}>{review.text}</p>
+          {reviews.length === 0 ? (
+            <div style={{ padding: "48px 24px", background: "#161612", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "12px", textAlign: "center" }}>
+              <p style={{ fontFamily: "var(--font-serif)", fontSize: "17px", fontStyle: "italic", color: "rgba(200,195,178,0.5)", margin: 0 }}>
+                No reflections yet. Be the first Disciple to share your experience.
+              </p>
+            </div>
+          ) : (
+            <>
+            {/* Rating breakdown */}
+            <div style={{ display: "flex", gap: "clamp(20px,4vw,48px)", alignItems: "center", flexWrap: "wrap", padding: "20px 24px", background: "#161612", border: "1px solid rgba(212,169,74,0.08)", borderRadius: "12px", marginBottom: "20px" }}>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontFamily: "var(--font-serif)", fontSize: "44px", fontWeight: 700, color: "#d4a94a", margin: 0, lineHeight: 1 }}>{aggregate.average.toFixed(1)}</p>
+                <div style={{ margin: "8px 0 4px" }}><Stars value={aggregate.average} size={14} /></div>
+                <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", margin: 0 }}>{aggregate.count} review{aggregate.count !== 1 ? "s" : ""}</p>
               </div>
-            ))}
-          </div>
+              <div style={{ flex: 1, minWidth: "220px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                {[5, 4, 3, 2, 1].map((star) => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const n = reviews.filter((r: any) => r.rating === star).length;
+                  const pct = aggregate.count > 0 ? (n / aggregate.count) * 100 : 0;
+                  return (
+                    <div key={star} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "11px", color: "rgba(160,155,135,0.6)", width: "24px", textAlign: "right" }}>{star} ★</span>
+                      <div style={{ flex: 1, height: "6px", borderRadius: "99px", background: "rgba(212,169,74,0.08)", overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", borderRadius: "99px", background: "#d4a94a" }} />
+                      </div>
+                      <span style={{ fontSize: "10px", color: "rgba(160,155,135,0.4)", width: "20px" }}>{n}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {reviews.map((review: any) => {
+                const name = review.user?.name || "Anonymous Seeker";
+                return (
+                  <div key={review.id} style={{
+                    padding: "20px", background: "#161612",
+                    border: "1px solid rgba(212,169,74,0.08)", borderRadius: "12px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                      <div style={{
+                        width: "36px", height: "36px", borderRadius: "50%",
+                        background: "rgba(212,169,74,0.12)", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: 700, color: "#d4a94a",
+                      }}>{name[0].toUpperCase()}</div>
+                      <div>
+                        <p style={{ fontSize: "12px", fontWeight: 700, color: "#f0ede6", margin: 0 }}>
+                          {name}
+                          {review.isVerifiedPurchase && (
+                            <span style={{ marginLeft: "8px", fontSize: "9px", fontWeight: 700, color: "#25e2f4", textTransform: "uppercase", letterSpacing: "0.08em" }}>✓ Verified</span>
+                          )}
+                        </p>
+                        <p style={{ fontSize: "10px", color: "rgba(160,155,135,0.45)", margin: 0 }}>
+                          {new Date(review.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: "2px", marginBottom: "10px" }}>
+                      {Array.from({ length: review.rating }).map((_, i) => (
+                        <span key={i} className="material-symbols-outlined" style={{ fontSize: "12px", color: "#d4a94a", fontVariationSettings: "'FILL' 1" }}>star</span>
+                      ))}
+                    </div>
+                    {review.title && (
+                      <p style={{ fontSize: "13px", fontWeight: 700, color: "#f0ede6", margin: "0 0 6px" }}>{review.title}</p>
+                    )}
+                    <p style={{ fontSize: "13px", color: "rgba(200,195,178,0.65)", lineHeight: 1.65, margin: 0 }}>{review.body}</p>
+                  </div>
+                );
+              })}
+            </div>
+            </>
+          )}
         </section>
 
         {/* ── RELATED PRODUCTS ── */}
@@ -273,7 +296,7 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
             </h2>
             <Link href="/products" style={{ fontSize: "12px", color: "#d4a94a", textDecoration: "none", fontWeight: 600 }}>View All</Link>
           </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+            <div className="grid-related">
               {relatedProducts.slice(0, 4).map((rp) => (
                 <Link key={rp.id} href={`/products/${rp.id}`} style={{ textDecoration: "none" }}>
                   <div 
@@ -285,7 +308,7 @@ export default async function ProductDetailsPage({ params }: ProductPageProps) {
                     }}
                   >
                   <div style={{ aspectRatio: "1 / 1", position: "relative", background: "#1c1c18" }}>
-                    <Image src={rp.imageUrl || ""} alt={rp.name} fill style={{ objectFit: "cover" }} />
+                    <Image src={rp.imageUrl || FALLBACK_PRODUCT_IMAGE} alt={rp.name} fill style={{ objectFit: "cover" }} />
                   </div>
                   <div style={{ padding: "12px" }}>
                     <h4 style={{ fontFamily: "var(--font-serif)", fontSize: "15px", fontWeight: 600, color: "#f0ede6", margin: "0 0 4px", lineHeight: 1.2 }}>{rp.name}</h4>

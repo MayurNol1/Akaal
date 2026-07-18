@@ -23,10 +23,14 @@ export const authConfig = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+      }
+      // Client-side `update({ name })` after a profile edit refreshes the token
+      if (trigger === "update" && typeof session?.name === "string") {
+        token.name = session.name;
       }
       return token;
     },

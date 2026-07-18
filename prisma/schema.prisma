@@ -14,12 +14,18 @@ model User {
   image         String?
   password      String?
   role          Role      @default(USER)
+  emailNotifications Boolean @default(true)
+  privacyMode        Boolean @default(false)
+  // Restricted accounts cannot sign in (admin "Ban" action)
+  isDisabled         Boolean @default(false)
   accounts      Account[]
   sessions      Session[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   orders        Order[]
   cart          Cart?
+  wishlistItems WishlistItem[]
+  reviews       Review[]
 }
 
 model Account {
@@ -79,6 +85,8 @@ model Product {
   updatedAt        DateTime    @updatedAt
   orderItems       OrderItem[]
   cartItems        CartItem[]
+  wishlistItems    WishlistItem[]
+  reviews          Review[]
 }
 
 model Order {
@@ -93,6 +101,11 @@ model Order {
   razorpayOrderId     String?    @unique
   razorpayPaymentId   String?    @unique
   razorpaySignature   String?
+  // Shipping address snapshot captured at checkout (see ShippingAddressSchema)
+  shippingAddress     Json?
+  // Coupon applied to this order, if any (percentage recorded at purchase time)
+  couponCode          String?
+  couponDiscount      Decimal? @db.Decimal(10, 2)
 }
 
 model OrderItem {
@@ -118,6 +131,8 @@ model Cart {
   userId    String    @unique
   user      User      @relation(fields: [userId], references: [id])
   items     CartItem[]
+  // Applied coupon code (validated against Coupon on read; cleared on checkout)
+  couponCode String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -132,6 +147,39 @@ model CartItem {
   createdAt DateTime @default(now())
 
   @@unique([cartId, productId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Review {
+  id                 String   @id @default(cuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId          String
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating             Int // 1–5
+  title              String?
+  body               String
+  isVerifiedPurchase Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([userId, productId])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
 }
 
 enum Role {

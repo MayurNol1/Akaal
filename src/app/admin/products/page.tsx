@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Filter, Edit2, Trash2, Eye, Package, AlertCircle } from "lucide-react";
+import { Plus, Search, X, Edit2, Trash2, Eye, Package, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type ProductWithCategory = {
   id: string;
@@ -18,10 +18,12 @@ type ProductWithCategory = {
 
 export default function AdminProductsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [products, setProducts] = useState<ProductWithCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const q = searchParams.get("search");
@@ -31,10 +33,15 @@ export default function AdminProductsPage() {
     }
   }, [searchParams, search]);
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.category?.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Out-of-stock products surface at the top so they get restocked
+  const filteredProducts = products
+    .filter(p =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.category?.name.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => (a.stock === 0 ? 0 : 1) - (b.stock === 0 ? 0 : 1));
+
+  const outOfStockCount = products.filter(p => p.stock === 0).length;
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -61,7 +68,14 @@ export default function AdminProductsPage() {
   }, []);
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to return ${name} to the void?`)) return;
+    // Two-step confirm: first click arms, second click within 3.5s deletes
+    if (pendingDelete !== id) {
+      setPendingDelete(id);
+      showToast(`Click delete again to return ${name} to the void.`, 'error');
+      setTimeout(() => setPendingDelete(prev => (prev === id ? null : prev)), 3500);
+      return;
+    }
+    setPendingDelete(null);
 
     try {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
@@ -97,33 +111,50 @@ export default function AdminProductsPage() {
            <p style={{ fontSize:"10px", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.25em", color:"rgba(160,155,135,0.45)", margin:0 }}>Product Management</p>
            <h1 className="text-5xl font-serif italic text-white tracking-tight">Artifact <span className="not-italic" style={{ color:"#d4a94a" }}>Vault</span></h1>
         </div>
-        <Link 
-          href="/admin/products/create"
-          style={{ background:"#d4a94a", color:"#10100e", padding:"10px 20px", borderRadius:"10px", fontSize:"11px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", display:"flex", alignItems:"center", gap:"8px", textDecoration:"none", border:"none", cursor:"pointer", whiteSpace:"nowrap" }}
-        >
-          <Plus size={16} />
-          Forge New Offering
-        </Link>
+        <div style={{ display:"flex", alignItems:"center", gap:"10px", flexWrap:"wrap" }}>
+          {outOfStockCount > 0 && !loading && (
+            <span style={{ display:"inline-flex", alignItems:"center", gap:"6px", padding:"10px 16px", borderRadius:"10px", background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.25)", fontSize:"11px", fontWeight:700, color:"#f87171", whiteSpace:"nowrap" }}>
+              <AlertCircle size={14} />
+              {outOfStockCount} Out of Stock
+            </span>
+          )}
+          <Link
+            href="/admin/products/create"
+            style={{ background:"#d4a94a", color:"#10100e", padding:"10px 20px", borderRadius:"10px", fontSize:"11px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", display:"flex", alignItems:"center", gap:"8px", textDecoration:"none", border:"none", cursor:"pointer", whiteSpace:"nowrap" }}
+          >
+            <Plus size={16} />
+            Forge New Offering
+          </Link>
+        </div>
       </div>
 
       {/* Filter Bar */}
       <div className="flex flex-col md:flex-row gap-6 items-center">
         <div className="relative flex-1 group w-full">
           <Search style={{ position:"absolute", left:"16px", top:"50%", transform:"translateY(-50%)", color:"rgba(160,155,135,0.4)" }} size={16} />
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search artifacts by name or vibration..."
-            style={{ width:"100%", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(212,169,74,0.1)", borderRadius:"12px", padding:"10px 10px 10px 44px", outline:"none", fontSize:"12px", color:"#f0ede6", fontFamily:"var(--font-sans)" }}
+            aria-label="Search products"
+            placeholder="Search artifacts by name or category..."
+            style={{ width:"100%", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(212,169,74,0.1)", borderRadius:"12px", padding:"10px 40px 10px 44px", outline:"none", fontSize:"12px", color:"#f0ede6", fontFamily:"var(--font-sans)" }}
           />
+          {search && (
+            <button
+              onClick={() => { setSearch(""); router.replace("/admin/products"); }}
+              aria-label="Clear search"
+              style={{ position:"absolute", right:"10px", top:"50%", transform:"translateY(-50%)", width:"24px", height:"24px", borderRadius:"50%", background:"rgba(212,169,74,0.1)", border:"1px solid rgba(212,169,74,0.2)", color:"#d4a94a", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+            >
+              <X size={12} />
+            </button>
+          )}
         </div>
-        <div className="flex gap-4 w-full md:w-auto">
-           <div style={{ padding:"10px 16px", borderRadius:"10px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(212,169,74,0.1)", display:"flex", alignItems:"center", gap:"8px", fontSize:"10px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.12em", color:"rgba(160,155,135,0.45)", cursor:"pointer", whiteSpace:"nowrap" }}>
-              <Filter size={16} />
-              Filter Essences
-           </div>
-        </div>
+        {search && !loading && (
+          <span style={{ padding:"10px 16px", borderRadius:"10px", background:"rgba(212,169,74,0.06)", border:"1px solid rgba(212,169,74,0.18)", fontSize:"11px", fontWeight:600, color:"#d4a94a", whiteSpace:"nowrap" }}>
+            {filteredProducts.length} match{filteredProducts.length !== 1 ? "es" : ""} for &ldquo;{search}&rdquo;
+          </span>
+        )}
       </div>
 
       {/* Product Table from Stitch UI */}
@@ -139,8 +170,11 @@ export default function AdminProductsPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => (
-              <tr key={product.id} style={{ borderBottom:"1px solid rgba(212,169,74,0.04)", transition:"background 0.15s", cursor:"default" }} onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.02)"}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="transparent"}}>
+            {filteredProducts.map((product) => {
+              const isOut = product.stock === 0;
+              const restBg = isOut ? "rgba(248,113,113,0.04)" : "transparent";
+              return (
+              <tr key={product.id} style={{ borderBottom:"1px solid rgba(212,169,74,0.04)", borderLeft: isOut ? "3px solid rgba(248,113,113,0.55)" : "3px solid transparent", background: restBg, transition:"background 0.15s", cursor:"default" }} onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.02)"}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=restBg}}>
                 <td className="px-10 py-8">
                   <div className="flex items-center gap-6">
                     <div style={{ width:"56px", height:"56px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(212,169,74,0.1)", borderRadius:"10px", overflow:"hidden", position:"relative", flexShrink:0 }}>
@@ -175,9 +209,15 @@ export default function AdminProductsPage() {
                   </div>
                 </td>
                 <td className="px-10 py-8">
-                  <p className="text-[11px]" style={{ fontSize:"11px", fontStyle:"italic", color:product.stock <= 5 ? "#ff9933" : "rgba(160,155,135,0.45)" }}>
-                    {product.stock} units available
-                  </p>
+                  {product.stock === 0 ? (
+                    <span style={{ display:"inline-flex", alignItems:"center", gap:"5px", padding:"4px 10px", borderRadius:"99px", fontSize:"10px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", color:"#f87171", background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.3)" }}>
+                      Out of Stock
+                    </span>
+                  ) : (
+                    <p className="text-[11px]" style={{ fontSize:"11px", fontStyle:"italic", color:product.stock <= 5 ? "#ff9933" : "rgba(160,155,135,0.45)" }}>
+                      {product.stock} units available
+                    </p>
+                  )}
                 </td>
                 <td className="px-10 py-8 text-right">
                   <p style={{ fontFamily:"var(--font-serif)", fontSize:"17px", fontWeight:700, color:"#f0ede6", fontStyle:"italic", margin:0 }}>
@@ -201,7 +241,8 @@ export default function AdminProductsPage() {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         

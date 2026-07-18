@@ -15,6 +15,13 @@ export class CartRepository {
     });
   }
 
+  static async findProduct(productId: string) {
+    return prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, stock: true, isActive: true },
+    });
+  }
+
   static async findItem(cartId: string, productId: string) {
     return prisma.cartItem.findUnique({
       where: {

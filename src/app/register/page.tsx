@@ -211,7 +211,7 @@ export default function RegisterPage() {
 
                 <p style={{ fontSize: "11px", color: "rgba(160,155,135,0.45)", margin: "4px 0 0" }}>
                   By creating an account you agree to our{" "}
-                  <Link href="#" style={{ color: "rgba(212,169,74,0.6)", textDecoration: "none" }}>Terms of Service</Link>
+                  <Link href="/terms" style={{ color: "rgba(212,169,74,0.6)", textDecoration: "none" }}>Terms of Service</Link>
                 </p>
 
                 <button type="submit" disabled={isLoading} style={{
@@ -237,8 +237,8 @@ export default function RegisterPage() {
       </div>
 
       <footer style={{ position: "fixed", bottom: 0, right: 0, padding: "16px 60px", fontSize: "11px", color: "rgba(160,155,135,0.45)", display: "flex", gap: "16px" }}>
-        <Link href="#" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Privacy</Link>
-        <Link href="#" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Terms</Link>
+        <Link href="/privacy" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Privacy</Link>
+        <Link href="/terms" style={{ color: "rgba(160,155,135,0.45)", textDecoration: "none" }}>Terms</Link>
         <span>© 2026 Akaal Spiritual Arts</span>
       </footer>
     </div>

@@ -35,7 +35,7 @@ type NewProductForm = {
 const LOW_STOCK = 10;
 
 function toSku(id: string) {
-  return `AKL-${id.slice(0, 6).toUpperCase()}`;
+  return `AKL-${id.slice(-6).toUpperCase()}`;
 }
 
 function statusOf(stock: number) {

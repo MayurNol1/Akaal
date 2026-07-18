@@ -2,12 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export function CartPlaceholder() {
   const [count, setCount] = useState(0);
   const pathname = usePathname();
+  const { status } = useSession();
 
   useEffect(() => {
+    // Guests have no server cart — skip the fetch (avoids a 401 on every page)
+    if (status !== "authenticated") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCount(0);
+      return;
+    }
     // Re-fetch cart whenever pathname changes or on mount
     const fetchCart = async () => {
       try {
@@ -28,7 +36,7 @@ export function CartPlaceholder() {
     // Listen to our custom event for cart updates
     window.addEventListener("cart-updated", fetchCart);
     return () => window.removeEventListener("cart-updated", fetchCart);
-  }, [pathname]);
+  }, [pathname, status]);
 
   if (count === 0) return null;
 

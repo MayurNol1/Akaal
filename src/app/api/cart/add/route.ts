@@ -25,6 +25,13 @@ export async function POST(req: Request) {
     const item = await addToCart(session.user.id, parsed.data);
     return successResponse(item, 201);
   } catch (error) {
+    // Stock/availability violations are user-facing 400s, not server faults
+    if (
+      error instanceof Error &&
+      (error.message.includes("stock") || error.message.includes("available"))
+    ) {
+      return errorResponse(error.message, 400);
+    }
     console.error("POST /api/cart/add error:", error);
     return errorResponse("Internal Server Error", 500);
   }

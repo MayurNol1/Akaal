@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Heart } from "lucide-react";
+import {
+  getServerWishlist,
+  toggleServerWishlist,
+  notifyWishlistUpdated,
+} from "@/lib/wishlist-client";
 
 interface LikeButtonProps {
   productId: string;
@@ -9,31 +15,62 @@ interface LikeButtonProps {
 }
 
 export function LikeButton({ productId, variant = "default" }: LikeButtonProps) {
+  const { status } = useSession();
   const [liked, setLiked] = useState(false);
+  const isAuthed = status === "authenticated";
 
   useEffect(() => {
-    const isLiked = localStorage.getItem(`liked_${productId}`) === "true";
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLiked(isLiked);
-  }, [productId]);
+    let cancelled = false;
 
-  const toggleLike = (e: React.MouseEvent) => {
+    const sync = () => {
+      if (isAuthed) {
+        getServerWishlist().then((ids) => {
+          if (!cancelled) setLiked(ids.has(productId));
+        });
+      } else if (status === "unauthenticated") {
+        setLiked(localStorage.getItem(`liked_${productId}`) === "true");
+      }
+    };
+
+    sync();
+    window.addEventListener("wishlist-updated", sync);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("wishlist-updated", sync);
+    };
+  }, [productId, isAuthed, status]);
+
+  const toggleLike = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigating if wrapped in a link
     const newState = !liked;
-    setLiked(newState);
+    setLiked(newState); // optimistic
+
+    if (isAuthed) {
+      try {
+        const serverState = await toggleServerWishlist(productId);
+        setLiked(serverState);
+      } catch {
+        setLiked(!newState); // revert on failure
+      }
+      return;
+    }
+
     if (newState) {
       localStorage.setItem(`liked_${productId}`, "true");
-      window.dispatchEvent(new Event("wishlist-updated"));
     } else {
       localStorage.removeItem(`liked_${productId}`);
-      window.dispatchEvent(new Event("wishlist-updated"));
     }
+    notifyWishlistUpdated();
   };
+
+  const label = liked ? "Remove from wishlist" : "Add to wishlist";
 
   if (variant === "card") {
     return (
-      <button 
+      <button
         onClick={toggleLike}
+        aria-label={label}
+        title={label}
         style={{ position:"absolute", top:"10px", right:"10px", zIndex:20, padding:"8px", borderRadius:"50%", background:"rgba(0,0,0,0.6)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.06)", cursor:"pointer", transition:"all 0.2s" }}
       >
         <Heart size={16} fill={liked ? "currentColor" : "none"} className={liked ? "scale-110" : "scale-100"} />
@@ -42,18 +79,20 @@ export function LikeButton({ productId, variant = "default" }: LikeButtonProps) 
   }
 
   return (
-    <button 
+    <button
       onClick={toggleLike}
+      aria-label={label}
+      title={label}
       className={`h-[60px] w-[60px] rounded-xl border flex items-center justify-center transition-all duration-300 ${
-        liked 
-          ? 'bg-red-500/10 border-red-500/30 text-red-500' 
+        liked
+          ? 'bg-red-500/10 border-red-500/30 text-red-500'
           : 'border-primary/20 text-primary hover:bg-primary/5'
       }`}
     >
-      <Heart 
-        size={20} 
-        fill={liked ? "currentColor" : "none"} 
-        className={liked ? "scale-110 transition-transform" : "scale-100 transition-transform"} 
+      <Heart
+        size={20}
+        fill={liked ? "currentColor" : "none"}
+        className={liked ? "scale-110 transition-transform" : "scale-100 transition-transform"}
       />
     </button>
   );
